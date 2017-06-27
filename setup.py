@@ -104,6 +104,5 @@ setuptools.setup(name='filefinder2',
         'prepare_release': PrepareReleaseCommand,
         'publish': PublishCommand,
     },
-    zip_safe=False,  # TODO testing...
 )
 
