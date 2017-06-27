@@ -92,17 +92,38 @@ setuptools.setup(name='filefinder2',
         'filefinder2',
         'filefinder2.tests', 'filefinder2.tests.nspkg', 'filefinder2.tests.nspkg.subpkg',
     ],
-    # this is better than using package data ( since behavior is a bit different from distutils... )
-    include_package_data=True,  # use MANIFEST.in during install.
-    # Reference for optional dependencies : http://stackoverflow.com/questions/4796936/does-pip-handle-extras-requires-from-setuptools-distribute-based-sources
+    # Reference for optional dependencies :
+    # http://stackoverflow.com/questions/4796936/does-pip-handle-extras-requires-from-setuptools-distribute-based-sources
     install_requires=[
         # this is needed as install dependency since we embed tests in the package.
-        'pytest>=2.8.0',  # as per hypothesis requirement (careful with 2.5.1 on trusty)
+        'pytest>=2.5.1',
         'pytest-xdist',  # for --boxed (careful with the version it will be moved out of xdist)
     ],
     cmdclass={
         'prepare_release': PrepareReleaseCommand,
         'publish': PublishCommand,
     },
+    classifiers=[
+        # How mature is this project? Common values are
+        #   3 - Alpha
+        #   4 - Beta
+        #   5 - Production/Stable
+        'Development Status :: 3 - Alpha',
+
+        # Indicate who your project is intended for
+        'Intended Audience :: Developers',
+        'Topic :: Software Development :: Libraries :: Python Modules',
+
+        # Pick your license as you wish (should match "license" above)
+         'License :: OSI Approved :: MIT License',
+
+        # Specify the Python versions you support here. In particular, ensure
+        # that you indicate whether you support Python 2, Python 3 or both.
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+    ],
 )
 
