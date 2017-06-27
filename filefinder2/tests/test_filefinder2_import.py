@@ -26,7 +26,8 @@ class TestImplicitNamespace(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # This should activate only for old python
-        filefinder2.activate()
+        if (2, 7) <= sys.version_info < (3, 4):
+            filefinder2.activate()
         # python3 implicit namespaces should work out of the box.
 
     def test_import_relative_ns_subpkg(self):

@@ -80,10 +80,6 @@ if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
         loader = FileLoader2, [suffix for suffix, mode, type in imp.get_suffixes()]
         return [loader]
 
-else:
-    # Useful to avoid traps since logic is different with finder and loader on python3
-    raise ImportError("filefinder2 : Unsupported python version")
-
 
 def _install_hook():
     """Install the path-based import components."""

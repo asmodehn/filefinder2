@@ -31,7 +31,8 @@ class TestImplicitNamespace(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # This should activate only for old python
-        filefinder2.activate()
+        if (2, 7) <= sys.version_info < (3, 4):
+            filefinder2.activate()
         # python3 implicit namespaces should work out of the box.
 
     @unittest.skipIf(not hasattr(importlib, '__import__'), reason="importlib does not have attribute __import__")
@@ -39,7 +40,7 @@ class TestImplicitNamespace(unittest.TestCase):
         """Verify that package is importable relatively"""
         print_importers()
         assert __package__
-        nspkg = importlib.__import__('.nspkg.subpkg')
+        nspkg = importlib.__import__('nspkg.subpkg', globals=globals(), level=1)  # need globals to handle relative imports
         test_pkg = nspkg.subpkg
 
         self.assertTrue(test_pkg is not None)
@@ -58,7 +59,7 @@ class TestImplicitNamespace(unittest.TestCase):
         """Verify that package is importable relatively"""
         print_importers()
         assert __package__
-        nspkg = importlib.__import__('.nspkg.subpkg.submodule')
+        nspkg = importlib.__import__('nspkg.subpkg.submodule', globals=globals(), level=1)  # need globals to handle relative imports
         test_mod = nspkg.subpkg.submodule
 
         self.assertTrue(test_mod is not None)
@@ -77,7 +78,7 @@ class TestImplicitNamespace(unittest.TestCase):
         """Verify that message class is importable relatively"""
         print_importers()
         assert __package__
-        nspkg = importlib.__import__('.nspkg.subpkg.TestClassInSubPkg')
+        nspkg = importlib.__import__('nspkg.subpkg', globals=globals(), level=1)  # need globals to handle relative imports
         TestClassInSubPkg = nspkg.subpkg.TestClassInSubPkg
 
         self.assertTrue(TestClassInSubPkg is not None)
@@ -95,8 +96,8 @@ class TestImplicitNamespace(unittest.TestCase):
         """Verify that package is importable relatively"""
         print_importers()
         assert __package__
-        nspkg = importlib.__import__('.nspkg.subpkg.submodule.TestClassInSubModule')
-        TestClassInSubModule = nspkg.subpkg.TestClassInSubModule
+        nspkg = importlib.__import__('nspkg.subpkg.submodule', globals=globals(), level=1)  # need globals to handle relative imports
+        TestClassInSubModule = nspkg.subpkg.submodule.TestClassInSubModule
 
         self.assertTrue(TestClassInSubModule is not None)
         self.assertTrue(callable(TestClassInSubModule))
@@ -115,8 +116,7 @@ class TestImplicitNamespace(unittest.TestCase):
         assert __package__
 
         with self.assertRaises(ImportError):
-            importlib.__import__('.bad_nspkg.bad_subpkg', package=__package__)
-
+            importlib.__import__('bad_nspkg.bad_subpkg', globals=globals(), level=1)  # need globals to handle relative imports
 
     @unittest.skipIf(not hasattr(importlib, 'find_loader') or not hasattr(importlib, 'load_module'),
                      reason="importlib does not have attribute find_loader or load_module")

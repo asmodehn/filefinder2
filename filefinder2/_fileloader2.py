@@ -133,7 +133,3 @@ if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
                     return self._ns_impl
                 else:
                     raise
-
-else:
-    # Useful to avoid traps since logic is different with finder and loader on python3
-    raise ImportError("filefinder2 : Unsupported python version")
