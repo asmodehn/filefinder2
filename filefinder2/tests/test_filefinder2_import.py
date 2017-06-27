@@ -10,24 +10,13 @@ CAREFUL : these tests should run with pytest --boxed in order to avoid polluting
 import sys
 import unittest
 
+# CAREFUL : it seems this does have side effect in pytest modules and hooks setup.
+from ._utils import print_importers
 import filefinder2
 
 # importlib
 # https://pymotw.com/3/importlib/index.html
 # https://pymotw.com/2/importlib/index.html
-
-
-def print_importers():
-    import sys
-    import pprint
-
-    print('PATH:'),
-    pprint.pprint(sys.path)
-    print()
-    print('IMPORTERS:')
-    for name, cache_value in sys.path_importer_cache.items():
-        name = name.replace(sys.prefix, '...')
-        print('%s: %r' % (name, cache_value))
 
 
 # We need to test implicit namespace packages PEP 420 (especially for python 2.7)
