@@ -112,7 +112,7 @@ if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
 
         def get_code(self, fullname):
             source = self.get_source(fullname)
-            _verbose_message('compiling code for "%s"' % fullname)
+            _verbose_message('compiling code for "{0!s}"'.format(fullname))
             return compile(source, self.get_filename(fullname), 'exec', dont_inherit=True)
 
         def is_package(self, fullname):
