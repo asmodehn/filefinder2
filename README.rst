@@ -1,4 +1,5 @@
-# filefinder2
+filefinder2
+===========
 
 [PEP420](https://www.python.org/dev/peps/pep-0420/) - Implicit Namespace Packages for Python 2.7
 
@@ -51,13 +52,15 @@
 .. end-badges
 
 
-## Usage:
-```python
-import sys
-import filefinder2
-if (2, 7) <= sys.version_info < (3, 4):
-    filefinder2.activate()
-    
-import namespace.package
-```
+Usage:
+-------
+::
+
+    import sys
+    import filefinder2
+    if (2, 7) <= sys.version_info < (3, 4):
+        filefinder2.activate()
+
+    import namespace.package
+
 
