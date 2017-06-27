@@ -11,4 +11,4 @@ def print_importers():
     print('IMPORTERS:')
     for name, cache_value in sys.path_importer_cache.items():
         name = name.replace(sys.prefix, '...')
-        print('%s: %r' % (name, cache_value))
+        print('{0!s}: {1!r}'.format(name, cache_value))
