@@ -40,7 +40,8 @@ if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
             for suffix, loader_class in self._loaders:
                 full_path = None  # adjusting path for package or file
                 if os.path.isdir(base_path) and os.path.isfile(os.path.join(base_path, '__init__' + suffix)):
-                    return loader_class(fullname, base_path)  # __init__.py path will be computed by the loader when needed
+                    # __init__.py path will be computed by the loader when needed
+                    return loader_class(fullname, base_path)
                 elif os.path.isfile(base_path + suffix):
                     return loader_class(fullname, base_path + suffix)
             else:
@@ -73,27 +74,10 @@ if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
         def __repr__(self):
             return 'FileFinder2({!r})'.format(self.path)
 
-    def _get_supported_ns_loaders():
+    def get_supported_ns_loaders():
         """Returns a list of file-based module loaders.
         Each item is a tuple (loader, suffixes).
         """
         loader = FileLoader2, [suffix for suffix, mode, type in imp.get_suffixes()]
         return [loader]
-
-
-def _install_hook():
-    """Install the path-based import components."""
-    if (2, 7) <= sys.version_info < (3, 4):  # TODO : test : valid until which py3 version ?
-        supported_loaders = _get_supported_ns_loaders()
-        ns_hook = FileFinder2.path_hook(*supported_loaders)
-        # Note this must be early in the list, since we change the logic regarding what is a package or not
-        sys.path_hooks.insert(1, ns_hook)
-        # Resetting sys.path_importer_cache values that are set to None (using default),
-        # to support the case where we have an implicit package inside an already loaded package,
-        # since we need to replace the default importer.
-        for path in [p for p, i in sys.path_importer_cache.items() if i is None]:
-            sys.path_importer_cache.pop(path)
-    else:
-        # Useful to avoid traps since logic is different with finder and loader on python3
-        raise ImportError("filefinder2 : Unsupported python version")
 
