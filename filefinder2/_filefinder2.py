@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function
 
 
 """
-A module to find python file, but also embedding namespace package logic (PEP420), implemented via pkg_resources
+A module to find python file, but also embedding namespace package logic (PEP420)
 """
 
 # We need to be extra careful with python versions
@@ -14,10 +14,87 @@ import sys
 if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
 
     from ._utils import _verbose_message
-    from ._fileloader2 import _ImportError, FileLoader2
+    from ._fileloader2 import _ImportError, FileLoader2, NamespaceLoader2
     import imp
+    import warnings
+
+    class NamespaceMetaFinder2(object):
+
+        @classmethod
+        def path_hooks(cls, path):  # from importlib.PathFinder
+            """Search sys.path_hooks for a finder for 'path'."""
+            if sys.path_hooks is not None and not sys.path_hooks:
+                warnings.warn('sys.path_hooks is empty', ImportWarning)
+            for hook in sys.path_hooks:
+                try:
+                    return hook(path)
+                except ImportError:
+                    continue
+            else:
+                return None
+
+        @classmethod
+        def _path_importer_cache(cls, path):  # from importlib.PathFinder
+            """Get the finder for the path entry from sys.path_importer_cache.
+            If the path entry is not in the cache, find the appropriate finder
+            and cache it. If no finder is available, store None.
+            """
+            if path == '':
+                try:
+                    path = os.getcwd()
+                except FileNotFoundError:
+                    # Don't cache the failure as the cwd can easily change to
+                    # a valid directory later on.
+                    return None
+            try:
+                finder = sys.path_importer_cache[path]
+            except KeyError:
+                finder = cls.path_hooks(path)
+                sys.path_importer_cache[path] = finder
+
+            return finder
+
+        def __init__(self, *modules):
+            """Initialisation of the finder depending on namespaces.
+            The issue here is that we do not have enough information at this stage
+            to determine which finder will be most appropriate for this path.
+
+            Only after find_module might we known which one should be chosen."""
+            self.module_names = modules
+
+        @classmethod
+        def find_module(cls, fullname, path=None):  # from importlib.PathFinder
+            """Try to find the module on sys.path or 'path'
+            The search is based on sys.path_hooks and sys.path_importer_cache.
+            """
+            if path is None:
+                path = sys.path
+            loader = None
+            for entry in path:
+                if not isinstance(entry, (str, bytes)):
+                    continue
+                finder = cls._path_importer_cache(entry)
+                if finder is not None:
+                    loader = finder.find_module(fullname)
+                    if loader is not None:
+                        break  # we stop at the first loader found
+
+            # if no loader was found, we need to start the namespace finding logic
+            if loader is None:
+                for entry in path:
+                    if not isinstance(entry, (str, bytes)):
+                        continue
+                    base_path = os.path.join(entry, fullname.rpartition('.')[-1])
+                    if os.path.isdir(entry) and os.path.exists(base_path):  # this should now be considered a namespace
+                        loader = NamespaceLoader2(fullname, base_path)
+                    if loader is not None:
+                        break  # we stop at the first loader found
+
+            return loader
+
 
     class FileFinder2(object):
+
         def __init__(self, path, *loader_details):
             """Initialize with the path to search on and a variable number of
             2-tuples containing the loader and the file suffixes the loader
@@ -29,6 +106,27 @@ if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
             # Base (directory) path
             self.path = path or '.'
             # Note : we are not playing with cache here (too complex to get right and not worth it for obsolete python)
+
+            # We need to check that we will be able to find a module or package,
+            # or raise ImportError to allow other finders to be instantiated for this path.
+            # => the logic must correspond to find_module()
+            findable = False
+            for root, dirs, files in os.walk(self.path):
+                findable = any(
+                    os.path.isfile(os.path.join(os.path.join(path, d), '__init__' + suffix))
+                    for suffix, _ in self._loaders
+                    for d in dirs
+                ) or any(
+                    f.endswith(suffix)
+                    for suffix, _ in self._loaders
+                    for f in files
+                )
+
+            if not findable:
+                raise _ImportError("cannot find any matching module based on extensions {0}".format(
+                    [s for s, _ in self._loaders]),
+                    path=self.path
+                )
 
         def find_module(self, fullname, path=None):
             """Try to find a loader for the specified module, or the namespace
@@ -44,13 +142,6 @@ if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
                     return loader_class(fullname, base_path)
                 elif os.path.isfile(base_path + suffix):
                     return loader_class(fullname, base_path + suffix)
-            else:
-                if os.path.isdir(base_path):
-                    # If a namespace package, return the path if we don't
-                    #  find a module in the next section.
-                    _verbose_message('possible namespace for {}'.format(base_path))
-                    return FileLoader2(fullname, base_path)
-
             return None
 
         @classmethod

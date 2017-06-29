@@ -80,6 +80,7 @@ class TestImplicitNamespace(unittest.TestCase):
         with self.assertRaises(ImportError):
             from .bad_nspkg import bad_subpkg
 
+# TODO  : test deriving an importer from filefinder2 to test the extension usage (like done in rosimporter)
 
 if __name__ == '__main__':
     import pytest
