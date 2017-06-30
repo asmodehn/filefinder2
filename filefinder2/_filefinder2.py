@@ -112,7 +112,7 @@ if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
             # => the logic must correspond to find_module()
             findable = False
             for root, dirs, files in os.walk(self.path):
-                findable = any(
+                findable = findable or any(
                     os.path.isfile(os.path.join(os.path.join(path, d), '__init__' + suffix))
                     for suffix, _ in self._loaders
                     for d in dirs
