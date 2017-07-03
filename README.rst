@@ -52,13 +52,20 @@ filefinder2
 .. end-badges
 
 
+filefinder2 aims at integrating PEP 420, and make every directory a namespace package, to mimic python3 behavior.
+
+To do this, filefinder2 includes finder and loader hooks that contain the implicit namespace logic.
+
+It is worth noting that we achieve this without pkg_resources or pkgutil, minimizing the dependencies necessary for that feature.
+
 Usage:
--------
+------
 ::
 
     import sys
-    import filefinder2
+
     if (2, 7) <= sys.version_info < (3, 4):
+        import filefinder2
         filefinder2.activate()
 
     import namespace.package
