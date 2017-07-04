@@ -72,6 +72,16 @@ class TestImplicitNamespace(unittest.TestCase):
         self.assertTrue(TestClassInSubModule is not None)
         self.assertTrue(callable(TestClassInSubModule))
 
+    def test_import_class_from_relative_ns_subpkg_bytecode(self):
+        """Verify that package is importable relatively"""
+        print_importers()
+        assert __package__
+
+        from .nspkg.subpkg.bytecode import TestClassInBytecode
+
+        self.assertTrue(TestClassInBytecode is not None)
+        self.assertTrue(callable(TestClassInBytecode))
+
     def test_import_relative_nonnspkg_raises(self):
         """Verify that package is importable relatively"""
         print_importers()
