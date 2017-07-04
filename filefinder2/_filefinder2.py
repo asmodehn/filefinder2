@@ -14,7 +14,7 @@ import sys
 if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
 
     from ._utils import _verbose_message
-    from ._fileloader2 import _ImportError, FileLoader2, NamespaceLoader2
+    from ._fileloader2 import _ImportError, FileLoader2, NamespaceLoader2, ImpLoader
     import imp
     import warnings
 
@@ -169,6 +169,11 @@ if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
         """Returns a list of file-based module loaders.
         Each item is a tuple (loader, suffixes).
         """
-        loader = FileLoader2, [suffix for suffix, mode, type in imp.get_suffixes()]
-        return [loader]
+        loaders = []
+        for suffix, mode, type in imp.get_suffixes():
+            if type == imp.PY_SOURCE:
+                loaders.append((FileLoader2, [suffix]))
+            else:
+                loaders.append((ImpLoader, [suffix]))
+        return loaders
 
