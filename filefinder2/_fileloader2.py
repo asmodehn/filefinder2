@@ -154,11 +154,11 @@ if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
                 e.__cause__ = exc
                 raise e
 
-            # source_bytes_readline = io.BytesIO(source_bytes).readline
-            # encoding = detect_encoding(source_bytes_readline)
-            # newline_decoder = io.IncrementalNewlineDecoder(None, True)
-            # return newline_decoder.decode(source_bytes.decode(encoding[0]))
-            return source_bytes
+            source_bytes_readline = io.BytesIO(source_bytes).readline
+            encoding = detect_encoding(source_bytes_readline)
+            newline_decoder = io.IncrementalNewlineDecoder(None, True)
+            return newline_decoder.decode(source_bytes.decode(encoding[0]))
+            # return source_bytes
 
         def load_module(self, name):
             """Load a module from a file.
