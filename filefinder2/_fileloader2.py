@@ -112,51 +112,6 @@ if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
 
         return default, [first, second]
 
-
-    def strip_encoding_cookie(filelike):
-        """Generator to pull lines from a text-mode file, skipping the encoding
-        cookie if it is found in the first two lines.
-        """
-        it = iter(filelike)
-        try:
-            first = next(it)
-            if not cookie_comment_re.match(first):
-                yield first
-            second = next(it)
-            if not cookie_comment_re.match(second):
-                yield second
-        except StopIteration:
-            return
-
-        for line in it:
-            yield line
-
-
-    def source_to_unicode(txt, errors='replace', skip_encoding_cookie=True):
-        """Converts a bytes string with python source code to unicode.
-        Unicode strings are passed through unchanged. Byte strings are checked
-        for the python source file encoding cookie to determine encoding.
-        txt can be either a bytes buffer or a string containing the source
-        code.
-        """
-        if isinstance(txt, unicode):  # unicode is the unicode type for py27
-            return txt
-        if isinstance(txt, str):
-            buffer = io.BytesIO(txt)
-        else:
-            buffer = txt
-        try:
-            encoding, _ = detect_encoding(buffer.readline)
-        except SyntaxError:
-            encoding = "ascii"
-        buffer.seek(0)
-        text = io.TextIOWrapper(buffer, encoding, errors=errors, line_buffering=True)
-        text.mode = 'r'
-        if skip_encoding_cookie:
-            return u"".join(strip_encoding_cookie(text))
-        else:
-            return text.read()
-
     class Loader2(object):
         """An abstract implementation of a Loader for py2.7"""
         def __init__(self, fullname, path=None):
@@ -203,9 +158,6 @@ if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
             # encoding = detect_encoding(source_bytes_readline)
             # newline_decoder = io.IncrementalNewlineDecoder(None, True)
             # return newline_decoder.decode(source_bytes.decode(encoding[0]))
-
-            # return source_to_unicode(source_bytes)
-
             return source_bytes
 
         def load_module(self, name):
@@ -322,97 +274,6 @@ if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
             """
             with io.FileIO(path, 'r') as file:
                 return file.read()
-
-    # from importlib py36
-    MAGIC_NUMBER = imp.get_magic()
-
-    def _w_long(x):
-        """Convert a 32-bit integer to little-endian."""
-        return (int(x) & 0xFFFFFFFF).to_bytes(4, 'little')
-
-
-    def _r_long(int_bytes):
-        """Convert 4 bytes in little-endian to an integer."""
-        return int.from_bytes(int_bytes, 'little')
-
-    _code_type = type(_r_long.__code__)
-
-    def _validate_bytecode_header(data, source_stats=None, name=None, path=None):
-        """Validate the header of the passed-in bytecode against source_stats (if
-        given) and returning the bytecode that can be compiled by compile().
-        All other arguments are used to enhance error reporting.
-        ImportError is raised when the magic number is incorrect or the bytecode is
-        found to be stale. EOFError is raised when the data is found to be
-        truncated.
-        """
-        exc_details = {}
-        if name is not None:
-            exc_details['name'] = name
-        else:
-            # To prevent having to make all messages have a conditional name.
-            name = '<bytecode>'
-        if path is not None:
-            exc_details['path'] = path
-        magic = data[:4]
-        raw_timestamp = data[4:8]
-        raw_size = data[8:12]
-        if magic != MAGIC_NUMBER:
-            message = 'bad magic number in {!r}: {!r}'.format(name, magic)
-            _verbose_message('{}', message)
-            raise ImportError(message, **exc_details)
-        elif len(raw_timestamp) != 4:
-            message = 'reached EOF while reading timestamp in {!r}'.format(name)
-            _verbose_message('{}', message)
-            raise EOFError(message)
-        elif len(raw_size) != 4:
-            message = 'reached EOF while reading size of source in {!r}'.format(name)
-            _verbose_message('{}', message)
-            raise EOFError(message)
-        if source_stats is not None:
-            try:
-                source_mtime = int(source_stats['mtime'])
-            except KeyError:
-                pass
-            else:
-                if _r_long(raw_timestamp) != source_mtime:
-                    message = 'bytecode is stale for {!r}'.format(name)
-                    _verbose_message('{}', message)
-                    raise ImportError(message, **exc_details)
-            try:
-                source_size = source_stats['size'] & 0xFFFFFFFF
-            except KeyError:
-                pass
-            else:
-                if _r_long(raw_size) != source_size:
-                    raise ImportError('bytecode is stale for {!r}'.format(name),
-                                      **exc_details)
-        return data[12:]
-
-
-    def _compile_bytecode(data, name=None, bytecode_path=None, source_path=None):
-        """Compile bytecode as returned by _validate_bytecode_header()."""
-        code = marshal.loads(data)
-        if isinstance(code, _code_type):
-            _verbose_message('code object from {!r}', bytecode_path)
-            if source_path is not None:
-                imp._fix_co_filename(code, source_path)
-            return code
-        else:
-            raise ImportError('Non-code object in {!r}'.format(bytecode_path),
-                              name=name, path=bytecode_path)
-
-
-    class SourcelessFileLoader2(FileLoader2):
-
-        def get_code(self, fullname):
-            path = self.get_filename(fullname)
-            data = self.get_data(path)
-            bytes_data = _validate_bytecode_header(data, name=fullname, path=path)
-            return _compile_bytecode(bytes_data, name=fullname, bytecode_path=path)
-
-        def get_source(self, name):
-            """Return None as there is no source code."""
-            return None
 
     class ImpLoader(Loader2):
         """An Import Loader for python 2.7 using imp module"""
