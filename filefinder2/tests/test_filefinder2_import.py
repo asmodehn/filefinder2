@@ -7,6 +7,7 @@ Testing rosmsg_import with import keyword.
 CAREFUL : these tests should run with pytest --boxed in order to avoid polluting each other sys.modules
 """
 
+import os
 import sys
 import unittest
 
@@ -25,6 +26,12 @@ import filefinder2
 class TestImplicitNamespace(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        # we compile the bytecode with the testing python interpreter
+        import py_compile
+        source_py = os.path.join(os.path.dirname(__file__), 'nspkg', 'subpkg', 'bytecode_source.py')
+        dest_pyc = os.path.join(os.path.dirname(__file__), 'nspkg', 'subpkg', 'bytecode.pyc')  # CAREFUL where ?
+        py_compile.compile(source_py, dest_pyc, doraise=True)
+
         # This should activate only for old python
         if (2, 7) <= sys.version_info < (3, 4):
             filefinder2.activate()

@@ -3,6 +3,7 @@ from __future__ import absolute_import, print_function
 Testing import statement with filefinder2
 """
 
+import os
 import sys
 import unittest
 import pytest  # we need to use pytest marker to get __package__ to get the proper value, making relative import works
@@ -30,6 +31,12 @@ import filefinder2
 class TestImplicitNamespace(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        # we compile the bytecode with the testing python interpreter
+        import py_compile
+        source_py = os.path.join(os.path.dirname(__file__), 'nspkg', 'subpkg', 'bytecode_source.py')
+        dest_pyc = os.path.join(os.path.dirname(__file__), 'nspkg', 'subpkg', 'bytecode.pyc')  # CAREFUL where ?
+        py_compile.compile(source_py, dest_pyc, doraise=True)
+
         # This should activate only for old python
         if (2, 7) <= sys.version_info < (3, 4):
             filefinder2.activate()
@@ -135,7 +142,7 @@ class TestImplicitNamespace(unittest.TestCase):
         assert __package__
         nspkg = importlib.__import__('nspkg.subpkg.bytecode', globals=globals(),
                                      level=1)  # need globals to handle relative imports
-        TestClassInBytecode = nspkg.subpkg.submodule.TestClassInBytecode
+        TestClassInBytecode = nspkg.subpkg.bytecode.TestClassInBytecode
 
         self.assertTrue(TestClassInBytecode is not None)
         self.assertTrue(callable(TestClassInBytecode))
