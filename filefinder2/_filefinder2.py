@@ -19,6 +19,9 @@ if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
     import warnings
 
     class NamespaceMetaFinder2(object):
+        """
+        MetaFinder to handle Implicit (PEP 420) Namespace Packages
+        """
 
         @classmethod
         def path_hooks(cls, path):  # from importlib.PathFinder
@@ -94,6 +97,9 @@ if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
 
 
     class FileFinder2(object):
+        """
+        FileFinder to find modules and load them via Loaders for python 2.7
+        """
 
         def __init__(self, path, *loader_details):
             """Initialize with the path to search on and a variable number of

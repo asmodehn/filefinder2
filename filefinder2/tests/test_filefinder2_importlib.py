@@ -29,6 +29,9 @@ import filefinder2
 # But we can only test relative package structure
 # TODO : depending on the python version we aim to support, we might be able to drop some tests here...
 class TestImplicitNamespace(unittest.TestCase):
+    """
+    Testing PEP 420
+    """
     @classmethod
     def setUpClass(cls):
         # we compile the bytecode with the testing python interpreter

@@ -248,6 +248,9 @@ if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
 
     # inspired from importlib
     class NamespaceLoader2(Loader2):
+        """
+        Loader for (Implicit) Namespace Package, inspired from importlib.
+        """
         def __init__(self, name, path=None):
             if not os.path.isdir(path):
                 raise _ImportError("cannot be a namespace package", path=path)
@@ -265,7 +268,7 @@ if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
             return True
 
         def get_filename(self, fullname):
-            """Return the path directly"""
+            """Return the path directly, is the matching directory"""
             return self.path
 
         def get_source(self, name):
@@ -317,7 +320,7 @@ if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
 
         def get_code(self, fullname):
             source = self.get_source(fullname)
-            _verbose_message('compiling code for "%s"' % fullname)
+            _verbose_message('compiling code for "{0}"'.format(fullname))
             try:
                 code = compile(source, self.get_filename(fullname), 'exec', dont_inherit=True)
                 return code

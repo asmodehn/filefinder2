@@ -24,6 +24,9 @@ import filefinder2
 # Since we rely on it for ros import.
 # But we can only test relative package structure
 class TestImplicitNamespace(unittest.TestCase):
+    """
+    Testing PEP 420
+    """
     @classmethod
     def setUpClass(cls):
         # we compile the bytecode with the testing python interpreter

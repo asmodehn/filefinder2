@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function
 
 
 def print_importers():
+    """Helper function to print sys.path and importers cache"""
     import sys
     import pprint
 

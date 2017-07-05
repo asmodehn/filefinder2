@@ -25,6 +25,7 @@ try:
     ImportError('msg', name='name', path='path')
 except TypeError:
     class _ImportError(ImportError):
+        """Implementing Import Error with name and path args"""
         def __init__(self, *args, **kwargs):
             self.name = kwargs.pop('name', None)
             self.path = kwargs.pop('path', None)
