@@ -14,7 +14,7 @@ import sys
 if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
 
     from ._utils import _verbose_message
-    from ._fileloader2 import _ImportError, FileLoader2, NamespaceLoader2, ImpLoader
+    from ._fileloader2 import _ImportError, SourceFileLoader2, NamespaceLoader2, ImpLoader
     import imp
     import warnings
 
@@ -172,7 +172,7 @@ if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
         loaders = []
         for suffix, mode, type in imp.get_suffixes():
             if type == imp.PY_SOURCE:
-                loaders.append((FileLoader2, [suffix]))
+                loaders.append((SourceFileLoader2, [suffix]))
             else:
                 loaders.append((ImpLoader, [suffix]))
         return loaders
