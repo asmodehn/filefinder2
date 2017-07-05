@@ -3,6 +3,7 @@ from __future__ import absolute_import, print_function
 Testing import statement with filefinder2
 """
 
+import os
 import sys
 import unittest
 import pytest  # we need to use pytest marker to get __package__ to get the proper value, making relative import works
@@ -30,6 +31,12 @@ import filefinder2
 class TestImplicitNamespace(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        # we compile the bytecode with the testing python interpreter
+        import py_compile
+        source_py = os.path.join(os.path.dirname(__file__), 'nspkg', 'subpkg', 'bytecode_source.py')
+        dest_pyc = os.path.join(os.path.dirname(__file__), 'nspkg', 'subpkg', 'bytecode.pyc')  # CAREFUL where ?
+        py_compile.compile(source_py, dest_pyc, doraise=True)
+
         # This should activate only for old python
         if (2, 7) <= sys.version_info < (3, 4):
             filefinder2.activate()
@@ -74,6 +81,25 @@ class TestImplicitNamespace(unittest.TestCase):
             pass
 
     @unittest.skipIf(not hasattr(importlib, '__import__'), reason="importlib does not have attribute __import__")
+    def test_importlib_import_relative_ns_subpkg_bytecode(self):
+        """Verify that package is importable relatively"""
+        print_importers()
+        assert __package__
+        nspkg = importlib.__import__('nspkg.subpkg.bytecode', globals=globals(), level=1)  # need globals to handle relative imports
+        test_mod = nspkg.subpkg.bytecode
+
+        self.assertTrue(test_mod is not None)
+        self.assertTrue(test_mod.TestClassInBytecode is not None)
+        self.assertTrue(callable(test_mod.TestClassInBytecode))
+
+        # TODO : implement some differences and check we get them...
+        if hasattr(importlib, 'reload'):  # recent version of importlib
+            # attempting to reload
+            importlib.reload(test_mod)
+        else:
+            pass
+
+    @unittest.skipIf(not hasattr(importlib, '__import__'), reason="importlib does not have attribute __import__")
     def test_importlib_import_class_from_relative_ns_subpkg(self):
         """Verify that message class is importable relatively"""
         print_importers()
@@ -101,6 +127,25 @@ class TestImplicitNamespace(unittest.TestCase):
 
         self.assertTrue(TestClassInSubModule is not None)
         self.assertTrue(callable(TestClassInSubModule))
+
+        # TODO : implement some differences and check we get them...
+        if hasattr(importlib, 'reload'):  # recent version of importlib
+            # attempting to reload
+            importlib.reload(nspkg)
+        else:
+            pass
+
+    @unittest.skipIf(not hasattr(importlib, '__import__'), reason="importlib does not have attribute __import__")
+    def test_importlib_import_class_from_relative_ns_subpkg_bytecode(self):
+        """Verify that package is importable relatively"""
+        print_importers()
+        assert __package__
+        nspkg = importlib.__import__('nspkg.subpkg.bytecode', globals=globals(),
+                                     level=1)  # need globals to handle relative imports
+        TestClassInBytecode = nspkg.subpkg.bytecode.TestClassInBytecode
+
+        self.assertTrue(TestClassInBytecode is not None)
+        self.assertTrue(callable(TestClassInBytecode))
 
         # TODO : implement some differences and check we get them...
         if hasattr(importlib, 'reload'):  # recent version of importlib
@@ -175,6 +220,34 @@ class TestImplicitNamespace(unittest.TestCase):
 
     @unittest.skipIf(not hasattr(importlib, 'find_loader') or not hasattr(importlib, 'load_module'),
                      reason="importlib does not have attribute find_loader or load_module")
+    def test_importlib_loadmodule_relative_ns_subpkg_bytecode(self):
+        """Verify that package is importable relatively"""
+        print_importers()
+        assert __package__
+
+        # Verify that files exists and are dynamically importable
+        pkg_list = '.nspkg.subpkg.bytecode'.split('.')[:-1]
+        mod_list = '.nspkg.subpkg.bytecode'.split('.')[1:]
+        pkg = None
+        for pkg_name, mod_name in zip(pkg_list, mod_list):
+            pkg_loader = importlib.find_loader(pkg_name, pkg.__path__ if pkg else None)
+            pkg = pkg_loader.load_module(mod_name)
+
+        test_mod = pkg
+
+        self.assertTrue(test_mod is not None)
+        self.assertTrue(test_mod.TestClassInBytecode is not None)
+        self.assertTrue(callable(test_mod.TestClassInBytecode))
+
+        # TODO : implement some differences and check we get them...
+        if hasattr(importlib, 'reload'):  # recent version of importlib
+            # attempting to reload
+            importlib.reload(test_mod)
+        else:
+            pass
+
+    @unittest.skipIf(not hasattr(importlib, 'find_loader') or not hasattr(importlib, 'load_module'),
+                     reason="importlib does not have attribute find_loader or load_module")
     def test_importlib_loadmodule_class_from_relative_ns_subpkg(self):
         """Verify that message class is importable relatively"""
         print_importers()
@@ -219,6 +292,33 @@ class TestImplicitNamespace(unittest.TestCase):
 
         self.assertTrue(TestClassInSubModule is not None)
         self.assertTrue(callable(TestClassInSubModule))
+
+        # TODO : implement some differences and check we get them...
+        if hasattr(importlib, 'reload'):  # recent version of importlib
+            # attempting to reload
+            importlib.reload(pkg)
+        else:
+            pass
+
+    @unittest.skipIf(not hasattr(importlib, 'find_loader') or not hasattr(importlib, 'load_module'),
+                     reason="importlib does not have attribute find_loader or load_module")
+    def test_importlib_loadmodule_class_from_relative_ns_subpkg_bytecode(self):
+        """Verify that package is importable relatively"""
+        print_importers()
+        assert __package__
+
+        # Verify that files exists and are dynamically importable
+        pkg_list = '.nspkg.subpkg.bytecode.TestClassInBytecode'.split('.')[:-1]
+        mod_list = '.nspkg.subpkg.bytecode.TestClassInBytecode'.split('.')[1:]
+        pkg = None
+        for pkg_name, mod_name in zip(pkg_list, mod_list):
+            pkg_loader = importlib.find_loader(pkg_name, pkg.__path__ if pkg else None)
+            pkg = pkg_loader.load_module(mod_name)
+
+        TestClassInBytecode = pkg
+
+        self.assertTrue(TestClassInBytecode is not None)
+        self.assertTrue(callable(TestClassInBytecode))
 
         # TODO : implement some differences and check we get them...
         if hasattr(importlib, 'reload'):  # recent version of importlib
@@ -276,6 +376,24 @@ class TestImplicitNamespace(unittest.TestCase):
             pass
 
     @unittest.skipIf(not hasattr(importlib, 'import_module'), reason="importlib does not have attribute __import__")
+    def test_importlib_importmodule_relative_ns_subpkg_bytecode(self):
+        """Verify that package is importable relatively"""
+        print_importers()
+        assert __package__
+        test_mod = importlib.import_module('.nspkg.subpkg.bytecode', package=__package__)
+
+        self.assertTrue(test_mod is not None)
+        self.assertTrue(test_mod.TestClassInBytecode is not None)
+        self.assertTrue(callable(test_mod.TestClassInBytecode))
+
+        # TODO : implement some differences and check we get them...
+        if hasattr(importlib, 'reload'):  # recent version of importlib
+            # attempting to reload
+            importlib.reload(test_mod)
+        else:
+            pass
+
+    @unittest.skipIf(not hasattr(importlib, 'import_module'), reason="importlib does not have attribute __import__")
     def test_importlib_importmodule_class_from_relative_ns_subpkg(self):
         """Verify that test class is importable relatively"""
         print_importers()
@@ -308,6 +426,24 @@ class TestImplicitNamespace(unittest.TestCase):
         if hasattr(importlib, 'reload'):  # recent version of importlib
             # attempting to reload
             importlib.reload(nspkg_subpkg_submodule)
+        else:
+            pass
+
+    @unittest.skipIf(not hasattr(importlib, 'import_module'), reason="importlib does not have attribute __import__")
+    def test_importlib_importmodule_class_from_relative_ns_subpkg_bytecode(self):
+        """Verify that test class is importable relatively"""
+        print_importers()
+        assert __package__
+        nspkg_subpkg_bytecode = importlib.import_module('.nspkg.subpkg.bytecode', package=__package__)
+        TestClassInBytecode = nspkg_subpkg_bytecode.TestClassInBytecode
+
+        self.assertTrue(TestClassInBytecode is not None)
+        self.assertTrue(callable(TestClassInBytecode))
+
+        # TODO : implement some differences and check we get them...
+        if hasattr(importlib, 'reload'):  # recent version of importlib
+            # attempting to reload
+            importlib.reload(nspkg_subpkg_bytecode)
         else:
             pass
 

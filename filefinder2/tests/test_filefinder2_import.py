@@ -7,6 +7,7 @@ Testing rosmsg_import with import keyword.
 CAREFUL : these tests should run with pytest --boxed in order to avoid polluting each other sys.modules
 """
 
+import os
 import sys
 import unittest
 
@@ -25,6 +26,12 @@ import filefinder2
 class TestImplicitNamespace(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        # we compile the bytecode with the testing python interpreter
+        import py_compile
+        source_py = os.path.join(os.path.dirname(__file__), 'nspkg', 'subpkg', 'bytecode_source.py')
+        dest_pyc = os.path.join(os.path.dirname(__file__), 'nspkg', 'subpkg', 'bytecode.pyc')  # CAREFUL where ?
+        py_compile.compile(source_py, dest_pyc, doraise=True)
+
         # This should activate only for old python
         if (2, 7) <= sys.version_info < (3, 4):
             filefinder2.activate()
@@ -52,6 +59,17 @@ class TestImplicitNamespace(unittest.TestCase):
         self.assertTrue(test_mod.TestClassInSubModule is not None)
         self.assertTrue(callable(test_mod.TestClassInSubModule))
 
+    def test_import_relative_ns_subpkg_bytecode(self):
+        """Verify that package is importable relatively"""
+        print_importers()
+        assert __package__
+
+        from .nspkg.subpkg import bytecode as test_bc
+
+        self.assertTrue(test_bc is not None)
+        self.assertTrue(test_bc.TestClassInBytecode is not None)
+        self.assertTrue(callable(test_bc.TestClassInBytecode))
+
     def test_import_class_from_relative_ns_subpkg(self):
         """Verify that message class is importable relatively"""
         print_importers()
@@ -71,6 +89,16 @@ class TestImplicitNamespace(unittest.TestCase):
 
         self.assertTrue(TestClassInSubModule is not None)
         self.assertTrue(callable(TestClassInSubModule))
+
+    def test_import_class_from_relative_ns_subpkg_bytecode(self):
+        """Verify that package is importable relatively"""
+        print_importers()
+        assert __package__
+
+        from .nspkg.subpkg.bytecode import TestClassInBytecode
+
+        self.assertTrue(TestClassInBytecode is not None)
+        self.assertTrue(callable(TestClassInBytecode))
 
     def test_import_relative_nonnspkg_raises(self):
         """Verify that package is importable relatively"""
