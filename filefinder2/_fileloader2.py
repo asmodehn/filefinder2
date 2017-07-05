@@ -355,11 +355,15 @@ if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
                     pkgname = ".".join(name.split('.')[:name_idx+1])
                     if pkgname not in sys.modules:
                         path = None
-                        # parent has to be in sys.modules. make sure it is a package, else fails
-                        if '.' in pkgname and '__path__' in vars(sys.modules[pkgname.rpartition('.')[0]]):
-                            path = sys.modules[pkgname.rpartition('.')[0]].__path__
-                        else:
-                            raise ImportError("{0} is not a package (no __path__ detected)".format(pkgname.rpartition('.')[0]))
+
+                        if '.' in pkgname:
+                            # parent has to be in sys.modules. make sure it is a package, else fails
+                            if '__path__' in vars(sys.modules[pkgname.rpartition('.')[0]]):
+                                path = sys.modules[pkgname.rpartition('.')[0]].__path__
+                            else:
+                                raise ImportError("{0} is not a package (no __path__ detected)".format(pkgname.rpartition('.')[0]))
+                        else:  # using __file__ instead. should always be there.
+                            path = sys.modules[pkgname].__file__ if pkgname in sys.modules else None
                         try:
                             file, pathname, description = imp.find_module(pkgname.rpartition('.')[-1], path)
                             sys.modules[pkgname] = imp.load_module(pkgname, file, pathname, description)
