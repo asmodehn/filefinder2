@@ -182,7 +182,8 @@ if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
 
         def __init__(self, fullname, path=None):
             self.name = fullname
-            self.path = path
+            # to get the same API as py3 Loader
+            self.path = os.path.dirname(path) if path.endswith('__init__.py') else path
 
         def __eq__(self, other):
             return (self.__class__ == other.__class__ and
