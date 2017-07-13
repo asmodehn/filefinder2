@@ -1,4 +1,4 @@
 gitchangelog
-twine
+twine==1.9.1
 pytest
 pytest-xdist
