@@ -18,13 +18,21 @@ if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
     import imp
     import warnings
 
-    class NamespaceMetaFinder2(object):
+    class PathFinder2(object):
         """
-        MetaFinder to handle Implicit (PEP 420) Namespace Packages
+        MetaFinder
         """
 
         @classmethod
-        def path_hooks(cls, path):  # from importlib.PathFinder
+        def invalidate_caches(cls):
+            """Call the invalidate_caches() method on all path entry finders
+            stored in sys.path_importer_caches (where implemented)."""
+            for finder in sys.path_importer_cache.values():
+                if hasattr(finder, 'invalidate_caches'):
+                    finder.invalidate_caches()
+
+        @classmethod
+        def _path_hooks(cls, path):  # from importlib.PathFinder
             """Search sys.path_hooks for a finder for 'path'."""
             if sys.path_hooks is not None and not sys.path_hooks:
                 warnings.warn('sys.path_hooks is empty', ImportWarning)
@@ -52,10 +60,16 @@ if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
             try:
                 finder = sys.path_importer_cache[path]
             except KeyError:
-                finder = cls.path_hooks(path)
+                finder = cls._path_hooks(path)
                 sys.path_importer_cache[path] = finder
 
             return finder
+
+
+    class NamespaceMetaFinder2(PathFinder2):
+        """
+        MetaFinder to handle Implicit (PEP 420) Namespace Packages
+        """
 
         def __init__(self, *modules):
             """Initialisation of the finder depending on namespaces.
