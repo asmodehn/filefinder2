@@ -230,6 +230,7 @@ if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
             try:
                 # Set a few properties required by PEP 302
                 mod.__file__ = self.get_filename(name)
+                # this will set mod.__repr__ to not builtin...
                 mod.__loader__ = self
                 if self.is_package(name):
                     mod.__path__ = [self.path]
@@ -258,12 +259,13 @@ if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
 
             super(NamespaceLoader2, self).__init__(name, path)
 
-        @classmethod
-        def module_repr(cls, module):
-            """Return repr for the module.
-            The method is deprecated.  The import machinery does the job itself.
+        def load_module(self, name):
+            """Load a module from a file.
             """
-            return '<module {!r} (namespace)>'.format(module.__name__)
+            mod = super(NamespaceLoader2, self).load_module(name)
+            # this will change mod.__repr__ to get rid of (builtin)...
+
+            return mod
 
         def is_package(self, fullname):
             return True
