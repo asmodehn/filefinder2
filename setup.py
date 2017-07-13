@@ -90,15 +90,11 @@ setuptools.setup(name='filefinder2',
     license='MIT',
     packages=[
         'filefinder2',
-        'filefinder2.tests', 'filefinder2.tests.nspkg', 'filefinder2.tests.nspkg.subpkg',
     ],
     # Reference for optional dependencies :
     # http://stackoverflow.com/questions/4796936/does-pip-handle-extras-requires-from-setuptools-distribute-based-sources
     install_requires=[
         'six',  # just to not have to redefine our 2/3 compatible types
-        # this is needed as install dependency since we embed tests in the package.
-        'pytest>=2.5.1',
-        'pytest-xdist',  # for --boxed (careful with the version it will be moved out of xdist)
     ],
     cmdclass={
         'prepare_release': PrepareReleaseCommand,
