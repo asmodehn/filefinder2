@@ -1,4 +1,4 @@
 gitchangelog==3.0.3
 twine
 pytest
-pytest-xdist
+pytest-xdist==1.18.1
