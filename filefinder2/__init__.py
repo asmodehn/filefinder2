@@ -7,8 +7,8 @@ if (2, 7) <= sys.version_info < (3, 4):  # TODO : test : valid until which py3 v
     from ._filefinder2 import get_supported_ns_loaders, PathFinder2, NamespaceMetaFinder2, FileFinder2
     from ._fileloader2 import NamespaceLoader2, Loader2, SourceFileLoader2, ImpLoader
 
-supported_loaders = get_supported_ns_loaders()
-path_hook = FileFinder2.path_hook(*supported_loaders)
+    supported_loaders = get_supported_ns_loaders()
+    path_hook = FileFinder2.path_hook(*supported_loaders)
 
 # Making the activation explicit for now
 def activate():
