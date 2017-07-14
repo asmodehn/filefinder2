@@ -1,4 +1,4 @@
 gitchangelog==3.0.3
-twine
+twine==1.9.1
 pytest
 pytest-xdist==1.18.1
