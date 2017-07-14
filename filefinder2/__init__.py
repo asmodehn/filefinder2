@@ -7,16 +7,16 @@ if (2, 7) <= sys.version_info < (3, 4):  # TODO : test : valid until which py3 v
     from ._filefinder2 import get_supported_ns_loaders, PathFinder2, NamespaceMetaFinder2, FileFinder2
     from ._fileloader2 import NamespaceLoader2, Loader2, SourceFileLoader2, ImpLoader
 
+supported_loaders = get_supported_ns_loaders()
+path_hook = FileFinder2.path_hook(*supported_loaders)
 
 # Making the activation explicit for now
 def activate():
     """Install the path-based import components."""
     if (2, 7) <= sys.version_info < (3, 4):  # TODO : test : valid until which py3 version ?
-        supported_loaders = get_supported_ns_loaders()
-        ns_hook = FileFinder2.path_hook(*supported_loaders)
         ##### Note this must be early in the list, since we change the logic regarding what is a package or not
         #sys.path_hooks.insert(1, ns_hook)
-        sys.path_hooks.append(ns_hook)
+        sys.path_hooks.append(path_hook)
         # Resetting sys.path_importer_cache values,
         # to support the case where we have an implicit package inside an already loaded package,
         # since we need to replace the default importer.
@@ -26,5 +26,5 @@ def activate():
         sys.meta_path.append(NamespaceMetaFinder2)
 
     else:
-        # Useful to avoid traps since logic is different with finder and loader on python3
+        # Useful to avoid traps since logic is likely different with finder and loader on python3
         raise ImportError("filefinder2 : Unsupported python version")
