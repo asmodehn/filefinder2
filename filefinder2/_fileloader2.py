@@ -263,7 +263,7 @@ if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
             """Load a module from a file.
             """
             mod = super(NamespaceLoader2, self).load_module(name)
-            # this will change mod.__repr__ to get rid of (builtin)...
+            # this will change mod.__repr__ to get rid of (built-in)...
 
             return mod
 
@@ -379,3 +379,4 @@ if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
                     del sys.modules[name]
                 raise
             return sys.modules[name]
+
