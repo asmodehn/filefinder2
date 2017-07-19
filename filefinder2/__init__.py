@@ -3,12 +3,13 @@ from __future__ import absolute_import, print_function
 import sys
 
 # Selective Import here to allow extending the import logic with other py2.7 importers
-if (2, 7) <= sys.version_info < (3, 4):  # TODO : test : valid until which py3 version ?
-    from ._filefinder2 import get_supported_file_loaders, PathFinder2, NamespaceMetaFinder2, FileFinder2
-    from ._fileloader2 import NamespaceLoader2, Loader2, SourceFileLoader2, ImpLoader
+from ._filefinder2 import (
+    get_supported_file_loaders, PathFinder2, NamespaceMetaFinder2, FileFinder2,
+    NamespaceLoader2, SourceFileLoader2, ImpLoader
+)
 
-    supported_loaders = get_supported_file_loaders()
-    path_hook = FileFinder2.path_hook(*supported_loaders)
+supported_loaders = get_supported_file_loaders()
+path_hook = FileFinder2.path_hook(*supported_loaders)
 
 
 # Making the activation explicit for now
@@ -27,5 +28,6 @@ def activate():
             sys.meta_path.append(NamespaceMetaFinder2)
 
     else:
-        # Useful to avoid traps since logic is likely different with finder and loader on python3
-        raise ImportError("filefinder2 : Unsupported python version")
+        # This should be exactly the usual python 3 import behavior
+        pass
+
