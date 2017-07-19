@@ -185,7 +185,7 @@ if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
         def __repr__(self):
             return 'FileFinder2({!r})'.format(self.path)
 
-    def get_supported_ns_loaders():
+    def get_supported_file_loaders():
         """Returns a list of file-based module loaders.
         Each item is a tuple (loader, suffixes).
         """
@@ -197,3 +197,28 @@ if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
                 loaders.append((ImpLoader, [suffix]))
         return loaders
 
+
+elif sys.version_info >= (3, 4):  # valid from which py3 version ?
+    from importlib.machinery import (
+        SOURCE_SUFFIXES, SourceFileLoader,
+        BYTECODE_SUFFIXES, SourcelessFileLoader,
+        EXTENSION_SUFFIXES, ExtensionFileLoader,
+        PathFinder, FileFinder,
+    )
+
+    PathFinder2 = PathFinder
+    FileFinder2 = FileFinder
+
+    # This is already defined in importlib._bootstrap_external
+    # but is not exposed.
+    def get_supported_file_loaders():
+        """Returns a list of file-based module loaders.
+        Each item is a tuple (loader, suffixes).
+        """
+        extensions = ExtensionFileLoader, EXTENSION_SUFFIXES
+        source = SourceFileLoader, SOURCE_SUFFIXES
+        bytecode = SourcelessFileLoader, BYTECODE_SUFFIXES
+        return [extensions, source, bytecode]
+
+else:
+    raise ImportError("filefinder2 : Unsupported python version")
