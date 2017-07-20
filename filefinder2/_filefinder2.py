@@ -127,6 +127,86 @@ if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
         return ModuleSpec(name, loader, origin=origin, is_package=is_package)
 
 
+    # def _init_module_attrs(spec, module, override=False):
+    #     # The passed-in module may be not support attribute assignment,
+    #     # in which case we simply don't set the attributes.
+    #     # __name__
+    #     if (override or getattr(module, '__name__', None) is None):
+    #         try:
+    #             module.__name__ = spec.name
+    #         except AttributeError:
+    #             pass
+    #     # __loader__
+    #     if override or getattr(module, '__loader__', None) is None:
+    #         loader = spec.loader
+    #         if loader is None:
+    #             # A backward compatibility hack.
+    #             if spec.submodule_search_locations is not None:
+    #                 if _bootstrap_external is None:
+    #                     raise NotImplementedError
+    #                 _NamespaceLoader = _bootstrap_external._NamespaceLoader
+    #
+    #                 loader = _NamespaceLoader.__new__(_NamespaceLoader)
+    #                 loader._path = spec.submodule_search_locations
+    #         try:
+    #             module.__loader__ = loader
+    #         except AttributeError:
+    #             pass
+    #     # __package__
+    #     if override or getattr(module, '__package__', None) is None:
+    #         try:
+    #             module.__package__ = spec.parent
+    #         except AttributeError:
+    #             pass
+    #     # __spec__
+    #     try:
+    #         module.__spec__ = spec
+    #     except AttributeError:
+    #         pass
+    #     # __path__
+    #     if override or getattr(module, '__path__', None) is None:
+    #         if spec.submodule_search_locations is not None:
+    #             try:
+    #                 module.__path__ = spec.submodule_search_locations
+    #             except AttributeError:
+    #                 pass
+    #     # __file__/__cached__
+    #     if spec.has_location:
+    #         if override or getattr(module, '__file__', None) is None:
+    #             try:
+    #                 module.__file__ = spec.origin
+    #             except AttributeError:
+    #                 pass
+    #
+    #         if override or getattr(module, '__cached__', None) is None:
+    #             if spec.cached is not None:
+    #                 try:
+    #                     module.__cached__ = spec.cached
+    #                 except AttributeError:
+    #                     pass
+    #     return module
+    #
+    #
+    # # Implementing module_from_spec, ported from python3
+    # # to provide a py2/py3 API
+    # def module_from_spec(spec):
+    #     """Create a module based on the provided spec."""
+    #     # Typically loaders will not implement create_module().
+    #     module = None
+    #     if hasattr(spec.loader, 'create_module'):
+    #         # If create_module() returns `None` then it means default
+    #         # module creation should be used.
+    #         module = spec.loader.create_module(spec)
+    #     elif hasattr(spec.loader, 'exec_module'):
+    #         warnings.warn('starting in Python 3.6, loaders defining exec_module() '
+    #                        'must also define create_module()',
+    #                        DeprecationWarning, stacklevel=2)
+    #     if module is None:
+    #         module = type(sys)(spec.name)
+    #     _init_module_attrs(spec, module)
+    #     return module
+
+
     class _NamespacePath:
         """Represents a namespace package's path.  It uses the module name
         to find its parent module, and from there it looks up the parent's
@@ -285,7 +365,22 @@ if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
             spec = cls.find_spec(fullname, path)
             if spec is None:
                 return None
-            return spec.loader
+
+            loader = spec.loader
+            # if no loader was found, we need to embed the namespace logic
+            # into the loader itself
+            if loader is None:
+                for entry in spec.submodule_search_locations:
+                    if not isinstance(entry, (str, bytes)):
+                        continue
+                    #base_path = os.path.join(entry, fullname.rpartition('.')[-1])
+                    #if os.path.isdir(entry) and os.path.exists(base_path):  # this should now be considered a namespace
+                    if os.path.isdir(entry):  # this should now be considered a namespace
+                        loader = NamespaceLoader2(fullname, entry)
+                    if loader is not None:
+                        break  # we stop at the first loader found
+
+            return loader
 
         @classmethod
         def find_spec(cls, fullname, path=None, target=None):
@@ -409,7 +504,7 @@ if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
                 init_full_path = os.path.join(base_path, init_filename)
                 full_path = base_path + suffix
                 if os.path.isfile(init_full_path):
-                    return self._get_spec(loader_class, fullname, full_path, [base_path], target)
+                    return self._get_spec(loader_class, fullname, init_full_path, [base_path], target)
                 if os.path.isfile(full_path):  # maybe we need more checks here (importlib filefinder checks its cache...)
                     return self._get_spec(loader_class, fullname, full_path, None, target)
             else:
@@ -441,27 +536,30 @@ if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
         #
         #     return spec_from_loader(fullname, loader)
         #
-        # def find_module(self, fullname):
-        #     """Try to find a loader for the specified module, or the namespace
-        #     package portions. Returns loader.
-        #     """
-        #     # Call find_loader(). If it returns a string (indicating this
-        #     # is a namespace package portion), generate a warning and
-        #     # return None.
-        #
-        #     spec = self.find_spec(fullname)
-        #     if spec is None:
-        #         loader = None
-        #         portions = []
-        #     else:
-        #         loader = spec.loader
-        #         portions = spec.submodule_search_locations or []
-        #
-        #     if loader is None and len(portions):
-        #         msg = 'Not importing directory {}: missing __init__'
-        #         warnings.warn(msg.format(portions[0]), ImportWarning)
-        #
-        #     return loader
+        def find_loader(self, fullname):
+            """Try to find a loader for the specified module, or the namespace
+            package portions. Returns (loader, list-of-portions).
+            This method is deprecated.  Use find_spec() instead.
+            """
+            spec = self.find_spec(fullname)
+            if spec is None:
+                return None, []
+            return spec.loader, spec.submodule_search_locations or []
+
+        def find_module(self, fullname):
+            """Try to find a loader for the specified module, or the namespace
+            package portions. Returns loader.
+            """
+            # Call find_loader(). If it returns a string (indicating this
+            # is a namespace package portion), generate a warning and
+            # return None.
+
+            loader, portions = self.find_loader(fullname)
+            if loader is None and len(portions):
+                # TODO : namespace loader ???
+                msg = 'Not importing directory {}: missing __init__'
+                warnings.warn(msg.format(portions[0]), ImportWarning)
+            return loader
 
         @classmethod
         def path_hook(cls, *loader_details):

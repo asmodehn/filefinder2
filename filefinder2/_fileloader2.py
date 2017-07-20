@@ -281,6 +281,42 @@ if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
         def get_code(self, fullname):
             return compile('', '<string>', 'exec', dont_inherit=True)
 
+    class _NamespaceLoader:
+        def __init__(self, name, path, path_finder):
+            self._path = _NamespacePath(name, path, path_finder)
+
+        @classmethod
+        def module_repr(cls, module):
+            """Return repr for the module.
+            The method is deprecated.  The import machinery does the job itself.
+            """
+            return '<module {!r} (namespace)>'.format(module.__name__)
+
+        def is_package(self, fullname):
+            return True
+
+        def get_source(self, fullname):
+            return ''
+
+        def get_code(self, fullname):
+            return compile('', '<string>', 'exec', dont_inherit=True)
+
+        def create_module(self, spec):
+            """Use default semantics for module creation."""
+
+        def exec_module(self, module):
+            pass
+
+        def load_module(self, fullname):
+            """Load a namespace module.
+            This method is deprecated.  Use exec_module() instead.
+            """
+            # The import system never calls this method.
+            _verbose_message('namespace module loaded with path {!r}', self._path)
+            return _bootstrap._load_module_shim(self, fullname)
+
+
+
     # inspired from importlib2
     class SourceFileLoader2(Loader2):
         """Base file loader class which implements the loader protocol methods that
