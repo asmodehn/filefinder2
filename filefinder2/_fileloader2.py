@@ -3,6 +3,7 @@ from __future__ import absolute_import, print_function
 import codecs
 
 import marshal
+import types
 
 import six
 
@@ -18,190 +19,185 @@ import sys
 
 from ._utils import _ImportError, _verbose_message
 
+
 if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
 
     import io
-    import errno
     import imp
-    import re
+    import warnings
 
-    # From IPython.utils.openpy
-    try:
-        from tokenize import detect_encoding
-    except ImportError:
-        from codecs import lookup, BOM_UTF8
+    from ._encoding_utils import decode_source
+    from ._module_utils import module_from_spec
 
-        # things we rely on and need to put it in cache early, to avoid recursing.
-        import encodings.ascii
-
-        cookie_re = re.compile(r"coding[:=]\s*([-\w.]+)", re.UNICODE)
-        cookie_comment_re = re.compile(r"^\s*#.*coding[:=]\s*([-\w.]+)", re.UNICODE)
-
-        # Copied from Python 3.2 tokenize
-        def _get_normal_name(orig_enc):
-            """Imitates get_normal_name in tokenizer.c."""
-            # Only care about the first 12 characters.
-            enc = orig_enc[:12].lower().replace("_", "-")
-            if enc == "utf-8" or enc.startswith("utf-8-"):
-                return "utf-8"
-            if enc in ("latin-1", "iso-8859-1", "iso-latin-1") or \
-                    enc.startswith(("latin-1-", "iso-8859-1-", "iso-latin-1-")):
-                return "iso-8859-1"
-            return orig_enc
-
-
-        # Copied from Python 3.2 tokenize
-        def detect_encoding(readline):
-            """
-            The detect_encoding() function is used to detect the encoding that should
-            be used to decode a Python source file.  It requires one argment, readline,
-            in the same way as the tokenize() generator.
-            It will call readline a maximum of twice, and return the encoding used
-            (as a string) and a list of any lines (left as bytes) it has read in.
-            It detects the encoding from the presence of a utf-8 bom or an encoding
-            cookie as specified in pep-0263.  If both a bom and a cookie are present,
-            but disagree, a SyntaxError will be raised.  If the encoding cookie is an
-            invalid charset, raise a SyntaxError.  Note that if a utf-8 bom is found,
-            'utf-8-sig' is returned.
-            If no encoding is specified, then the default of 'utf-8' will be returned.
-            """
-            bom_found = False
-            encoding = None
-            default = 'utf-8'
-
-            def read_or_stop():
-                try:
-                    return readline()
-                except StopIteration:
-                    return b''
-
-            def find_cookie(line):
-                try:
-                    line_string = line.decode('ascii')
-                except UnicodeDecodeError:
-                    return None
-
-                matches = cookie_re.findall(line_string)
-                if not matches:
-                    return None
-                encoding = _get_normal_name(matches[0])
-                try:
-                    codec = lookup(encoding)
-                except LookupError:
-                    # This behaviour mimics the Python interpreter
-                    raise SyntaxError("unknown encoding: " + encoding)
-
-                if bom_found:
-                    if codec.name != 'utf-8':
-                        # This behaviour mimics the Python interpreter
-                        raise SyntaxError('encoding problem: utf-8')
-                    encoding += '-sig'
-                return encoding
-
-            first = read_or_stop()
-            if first.startswith(BOM_UTF8):
-                bom_found = True
-                first = first[3:]
-                default = 'utf-8-sig'
-            if not first:
-                return default, []
-
-            encoding = find_cookie(first)
-            if encoding:
-                return encoding, [first]
-
-            second = read_or_stop()
-            if not second:
-                return default, [first]
-
-            encoding = find_cookie(second)
-            if encoding:
-                return encoding, [first, second]
-
-            return default, [first, second]
-
-
-    def strip_encoding_cookie(filelike):
-        """Generator to pull lines from a text-mode file, skipping the encoding
-        cookie if it is found in the first two lines.
+    # Needed by _spec_utils so we load it before importing
+    def get_supported_file_loaders():
+        """Returns a list of file-based module loaders.
+        Each item is a tuple (loader, suffixes).
         """
-        it = iter(filelike)
-        try:
-            first = next(it)
-            if not cookie_comment_re.match(first):
-                yield first
-            second = next(it)
-            if not cookie_comment_re.match(second):
-                yield second
-        except StopIteration:
-            return
+        loaders = []
+        for suffix, mode, type in imp.get_suffixes():
+            if type == imp.PY_SOURCE:
+                loaders.append((SourceFileLoader2, [suffix]))
+            else:
+                loaders.append((ImpFileLoader, [suffix]))
+        return loaders
 
-        for line in it:
-            yield line
+elif sys.version_info >= (3, 4):  # valid from which py3 version ?
 
+    from importlib.machinery import (
+        SOURCE_SUFFIXES, SourceFileLoader,
+        BYTECODE_SUFFIXES, SourcelessFileLoader,
+        EXTENSION_SUFFIXES, ExtensionFileLoader,
+    )
 
-    def source_to_unicode(txt, errors='replace', skip_encoding_cookie=True):
-        """Converts a bytes string with python source code to unicode.
-        Unicode strings are passed through unchanged. Byte strings are checked
-        for the python source file encoding cookie to determine encoding.
-        txt can be either a bytes buffer or a string containing the source
-        code.
+    SourceFileLoader2 = SourceFileLoader
+    SourcelessFileLoader2 = SourcelessFileLoader
+    ExtensionFileLoader2 = ExtensionFileLoader
+
+    # This is already defined in importlib._bootstrap_external
+    # but is not exposed.
+    def get_supported_file_loaders():
+        """Returns a list of file-based module loaders.
+        Each item is a tuple (loader, suffixes).
         """
-        if isinstance(txt, six.text_type):
-            return txt
-        if isinstance(txt, six.binary_type):
-            buffer = io.BytesIO(txt)
-        else:
-            buffer = txt
-        try:
-            encoding, _ = detect_encoding(buffer.readline)
-        except SyntaxError:
-            encoding = "ascii"
-        buffer.seek(0)
+        extensions = ExtensionFileLoader, EXTENSION_SUFFIXES
+        source = SourceFileLoader, SOURCE_SUFFIXES
+        bytecode = SourcelessFileLoader, BYTECODE_SUFFIXES
+        return [extensions, source, bytecode]
 
-        newline_decoder = io.IncrementalNewlineDecoder(None, True)
 
-        text = io.TextIOWrapper(buffer, encoding, errors=errors, line_buffering=True)
-        text.mode = 'r'
-        if skip_encoding_cookie:
-            return u"".join(strip_encoding_cookie(text))
-        else:
-            return text.read()
+try:
+    from importlib.util import MAGIC_NUMBER
+except:
+    MAGIC_NUMBER = imp.get_magic()
 
-    def decode_source(source_bytes):
-        """Decode bytes representing source code and return the string.
-        Universal newline support is used in the decoding.
-        """
-        # source_bytes_readline = io.BytesIO(source_bytes).readline
-        # encoding, _ = detect_encoding(source_bytes_readline)
-        newline_decoder = io.IncrementalNewlineDecoder(None, True)
-        return newline_decoder.decode(source_to_unicode(source_bytes))
 
-    class Loader2(object):
-        """Base class of common code needed by SourceFileLoader2, NamespaceLoader2 and ImpLoader."""
 
-        def __init__(self, fullname, path=None):
-            self.name = fullname
-            # to get the same API as py3 Loader
-            self.path = os.path.dirname(path) if path.endswith('__init__.py') else path
 
-        def __eq__(self, other):
-            return (self.__class__ == other.__class__ and
-                    self.__dict__ == other.__dict__)
+try:
+    # Trying to import all at once (since the class hierarchy is similar)
+    # I am not aware of any python implementation where we have one but not the two others...
+    from importlib.machinery import SourceFileLoader, SourcelessFileLoader, ExtensionFileLoader
+except ImportError:
+    # backporting SourceFileLoader from python3
 
-        def __hash__(self):
-            return hash(self.name) ^ hash(self.path)
+    from ._spec_utils import spec_from_loader
+
+
+    # def _exec(spec, module):
+    #     """Execute the spec in an existing module's namespace."""
+    #     name = spec.name
+    #     imp.acquire_lock()
+    #     with _ModuleLockManager(name):
+    #         if sys.modules.get(name) is not module:
+    #             msg = 'module {!r} not in sys.modules'.format(name)
+    #             raise _ImportError(msg, name=name)
+    #         if spec.loader is None:
+    #             if spec.submodule_search_locations is None:
+    #                 raise _ImportError('missing loader', name=spec.name)
+    #             # namespace package
+    #             _init_module_attrs(spec, module, override=True)
+    #             return module
+    #         _init_module_attrs(spec, module, override=True)
+    #         if not hasattr(spec.loader, 'exec_module'):
+    #             # (issue19713) Once BuiltinImporter and ExtensionFileLoader
+    #             # have exec_module() implemented, we can add a deprecation
+    #             # warning here.
+    #             spec.loader.load_module(name)
+    #         else:
+    #             spec.loader.exec_module(module)
+    #     return sys.modules[name]
+
+
+
+    # We need to be extra careful with python versions
+    # Ref : https://docs.python.org/2/library/modules.html?highlight=imports
+    # Ref : https://docs.python.org/3/library/modules.html?highlight=imports
+    import os
+    import sys
+
+    import warnings
+    from ._utils import _ImportError, _verbose_message
+    from ._module_utils import ModuleSpec, module_from_spec
+
+
+    class _NamespacePath(object):
+        """Represents a namespace package's path.  It uses the module name
+        to find its parent module, and from there it looks up the parent's
+        __path__.  When this changes, the module's own path is recomputed,
+        using path_finder.  For top-level modules, the parent module's path
+        is sys.path."""
+
+        def __init__(self, name, path, path_finder):
+            self._name = name
+            self._path = path
+            self._last_parent_path = tuple(self._get_parent_path())
+            self._path_finder = path_finder
+
+        def _find_parent_path_names(self):
+            """Returns a tuple of (parent-module-name, parent-path-attr-name)"""
+            parent, dot, me = self._name.rpartition('.')
+            if dot == '':
+                # This is a top-level module. sys.path contains the parent path.
+                return 'sys', 'path'
+            # Not a top-level module. parent-module.__path__ contains the
+            #  parent path.
+            return parent, '__path__'
+
+        def _get_parent_path(self):
+            parent_module_name, path_attr_name = self._find_parent_path_names()
+            return getattr(sys.modules[parent_module_name], path_attr_name)
+
+        def _recalculate(self):
+            # If the parent's path has changed, recalculate _path
+            parent_path = tuple(self._get_parent_path())  # Make a copy
+            if parent_path != self._last_parent_path:
+                spec = self._path_finder(self._name, parent_path)
+                # Note that no changes are made if a loader is returned, but we
+                #  do remember the new parent path
+                if spec is not None and spec.loader is None:
+                    if spec.submodule_search_locations:
+                        self._path = spec.submodule_search_locations
+                self._last_parent_path = parent_path  # Save the copy
+            return self._path
+
+        def __iter__(self):
+            return iter(self._recalculate())
+
+        def __len__(self):
+            return len(self._recalculate())
+
+        def __repr__(self):
+            return '_NamespacePath({!r})'.format(self._path)
+
+        def __contains__(self, item):
+            return item in self._recalculate()
+
+        def append(self, item):
+            self._path.append(item)
+
+
+    class _LoaderBasics(object):
+
+        """Base class of common code needed by both SourceLoader and
+        SourcelessFileLoader."""
 
         def is_package(self, fullname):
-            # in case of package we have to always have the directory as self.path
-            # CAREFUL : This is a different logic than importlib, to also support namespaces.
-            return os.path.isdir(self.path)
+            """Concrete implementation of InspectLoader.is_package by checking if
+            the path returned by get_filename has a filename of '__init__.py'."""
+            filename = os.path.split(self.get_filename(fullname))[1]
+            filename_base = filename.rsplit('.', 1)[0]
+            tail_name = fullname.rpartition('.')[2]
+            return filename_base == '__init__' and tail_name != '__init__'
 
-        def get_filename(self, fullname):
-            raise NotImplemented
+        def create_module(self, spec):
+            """Use default semantics for module creation."""
 
-        def get_code(self, fullname):
-            raise NotImplemented
+        def create_module(self, spec):
+            """Creates the module, and also insert it into sys.modules, adding this onto py2 import logic."""
+            mod = sys.modules.setdefault(spec.name, types.ModuleType(spec.name))
+            # we are using setdefault to satisfy https://docs.python.org/3/reference/import.html#loaders
+            return mod
 
         def exec_module(self, module):
             """Execute the module."""
@@ -212,67 +208,137 @@ if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
 
             exec(code, module.__dict__)
 
-        def load_module(self, name):
-            """Load a module from a file.
+        def load_module(self, fullname):
+            """Load the specified module into sys.modules and return it.
+            This method is for python2 only, but implemented with backported py3 methods.
             """
-            # Implementation inspired from pytest.rewrite and importlib
 
-            # If there is an existing module object named 'name' in
-            # sys.modules, the loader must use that existing module. (Otherwise,
-            # the reload() builtin will not work correctly.)
-            if name in sys.modules:
-                return sys.modules[name]
-
-            # I wish I could just call imp.load_compiled here, but __file__ has to
-            # be set properly. In Python 3.2+, this all would be handled correctly
-            # by load_compiled.
-            mod = sys.modules.setdefault(name, imp.new_module(name))
-            try:
-                # Set a few properties required by PEP 302
-                mod.__file__ = self.get_filename(name)
-                # this will set mod.__repr__ to not builtin...
-                mod.__loader__ = self
-                if self.is_package(name):
-                    mod.__path__ = [self.path]
-                    mod.__package__ = name  # PEP 366
-                else:
-                    mod.__package__ = '.'.join(name.split('.')[:-1])  # PEP 366
-                # if we want to skip compilation - useful for debugging
-                # source = self.get_source(name)
-                # exec(source, mod.__dict__)
+            if fullname in sys.modules:
+                mod = sys.modules[fullname]
                 self.exec_module(mod)
+                # In this case we do not want to remove the module in case of error
+                # Ref : https://docs.python.org/3/reference/import.html#loaders
+            else:
+                try:
+                    # Retrieving the spec to help creating module properly
+                    spec = spec_from_loader(fullname, self)
 
-            except:
-                if name in sys.modules:
-                    del sys.modules[name]
-                raise
-            return sys.modules[name]
+                    # this will call create_module and also initialize the module properly (like for py3)
+                    mod = module_from_spec(spec)
+
+                    # as per https://docs.python.org/3/reference/import.html#loaders
+                    assert mod.__name__ in sys.modules
+
+                    self.exec_module(mod)
+                    # We don't ensure that the import-related module attributes get
+                    # set in the sys.modules replacement case.  Such modules are on
+                    # their own.
+                except:
+                    # as per https://docs.python.org/3/reference/import.html#loaders
+                    if fullname in sys.modules:
+                        del sys.modules[fullname]
+                    raise
+
+            return sys.modules[fullname]
+
+        # An old working pure python2 load_module implementation.
+        # Keeping it around for reference...
+        # def load_module(self, name):
+        #
+        #     """Load a module from a file.
+        #     """
+        #     # Implementation inspired from pytest.rewrite and importlib
+        #
+        #     # If there is an existing module object named 'name' in
+        #     # sys.modules, the loader must use that existing module. (Otherwise,
+        #     # the reload() builtin will not work correctly.)
+        #     if name in sys.modules:
+        #         return sys.modules[name]
+        #
+        #     # I wish I could just call imp.load_compiled here, but __file__ has to
+        #     # be set properly. In Python 3.2+, this all would be handled correctly
+        #     # by load_compiled.
+        #     mod = sys.modules.setdefault(name, imp.new_module(name))
+        #     try:
+        #         # Set a few properties required by PEP 302
+        #         mod.__file__ = self.get_filename(name)
+        #         # this will set mod.__repr__ to not builtin...
+        #         mod.__loader__ = self
+        #         if self.is_package(name):
+        #             mod.__path__ = [self.path]
+        #             mod.__package__ = name  # PEP 366
+        #         else:
+        #             mod.__package__ = '.'.join(name.split('.')[:-1])  # PEP 366
+        #         # if we want to skip compilation - useful for debugging
+        #         # source = self.get_source(name)
+        #         # exec(source, mod.__dict__)
+        #         self.exec_module(mod)
+        #
+        #     except:
+        #         if name in sys.modules:
+        #             del sys.modules[name]
+        #         raise
+        #     return sys.modules[name]
 
     # inspired from importlib
-    class NamespaceLoader2(Loader2):
+    # Note this is NOT the same as importlib._NamespaceLoader
+    # Original importlib._NamespaceLoader is a loader as a hack from no_spec -> namespace feature when initializing
+    # whereas this one is a hack from no_spec -> namespace feature when returning a loader to actually be executed
+    class NamespaceLoader2(_LoaderBasics):
         """
         Loader for (Implicit) Namespace Package, inspired from importlib.
         """
-        def __init__(self, name, path=None):
-            if not os.path.isdir(path):
-                raise _ImportError("cannot be a namespace package", path=path)
 
-            super(NamespaceLoader2, self).__init__(name, path)
+        def __init__(self, name, path):
+            self.name = name
+            self.path = path
+
+        def create_module(self, spec):
+            """Improve python2 semantics for module creation."""
+            mod = super(NamespaceLoader2, self).create_module(spec)
+            # Set a few properties required by PEP 302
+            mod.__file__ = [p for p in self.path]
+            # this will set mod.__repr__ to not builtin... shouldnt break anything in py2...
+            # CAREFUL : get_filename present implies the module has ONE location, which is not true with namespaces
+            return mod
 
         def load_module(self, name):
-            """Load a module from a file.
+            """Load a namespace module as if coming from an empty file.
             """
-            mod = super(NamespaceLoader2, self).load_module(name)
-            # this will change mod.__repr__ to get rid of (built-in)...
+            _verbose_message('namespace module loaded with path {!r}', self.path)
 
-            return mod
+            # Adjusting code from LoaderBasics
+            if name in sys.modules:
+                mod = sys.modules[name]
+                self.exec_module(mod)
+                # In this case we do not want to remove the module in case of error
+                # Ref : https://docs.python.org/3/reference/import.html#loaders
+            else:
+                try:
+                    # Building custom spec and loading as in _LoaderBasics...
+                    spec = ModuleSpec(name, self, origin='namespace', is_package=True)
+                    spec.submodule_search_locations = self.path
+
+                    # this will call create_module and also initialize the module properly (like for py3)
+                    mod = module_from_spec(spec)
+
+                    # as per https://docs.python.org/3/reference/import.html#loaders
+                    assert mod.__name__ in sys.modules
+
+                    self.exec_module(mod)
+                    # We don't ensure that the import-related module attributes get
+                    # set in the sys.modules replacement case.  Such modules are on
+                    # their own.
+                except:
+                    # as per https://docs.python.org/3/reference/import.html#loaders
+                    if name in sys.modules:
+                        del sys.modules[name]
+                    raise
+
+            return sys.modules[name]
 
         def is_package(self, fullname):
             return True
-
-        def get_filename(self, fullname):
-            """Return the path directly, is the matching directory"""
-            return self.path
 
         def get_source(self, name):
             # Better to not rely on anyone (pkg_resources/pkgutil) for this, since it seems we can...
@@ -281,69 +347,12 @@ if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
         def get_code(self, fullname):
             return compile('', '<string>', 'exec', dont_inherit=True)
 
-    class _NamespaceLoader:
-        def __init__(self, name, path, path_finder):
-            self._path = _NamespacePath(name, path, path_finder)
+    class SourceLoader(_LoaderBasics):
 
-        @classmethod
-        def module_repr(cls, module):
-            """Return repr for the module.
-            The method is deprecated.  The import machinery does the job itself.
+        def set_data(self, path, data):
+            """Optional method which writes data (bytes) to a file path (a str).
+            Implementing this method allows for the writing of bytecode files.
             """
-            return '<module {!r} (namespace)>'.format(module.__name__)
-
-        def is_package(self, fullname):
-            return True
-
-        def get_source(self, fullname):
-            return ''
-
-        def get_code(self, fullname):
-            return compile('', '<string>', 'exec', dont_inherit=True)
-
-        def create_module(self, spec):
-            """Use default semantics for module creation."""
-
-        def exec_module(self, module):
-            pass
-
-        def load_module(self, fullname):
-            """Load a namespace module.
-            This method is deprecated.  Use exec_module() instead.
-            """
-            # The import system never calls this method.
-            _verbose_message('namespace module loaded with path {!r}', self._path)
-            return _bootstrap._load_module_shim(self, fullname)
-
-
-
-    # inspired from importlib2
-    class SourceFileLoader2(Loader2):
-        """Base file loader class which implements the loader protocol methods that
-        require file system usage. Also implements implicit namespace package PEP 420.
-
-        CAREFUL: the finder/loader logic is DIFFERENT than for python3.
-        A namespace package, or a normal package, need to return a directory path.
-        get_filename() will append '__init__.py' if it exists and needs to be called when a module path is needed
-        """
-
-        def __init__(self, fullname, path):
-            """Cache the module name and the path to the file found by the
-            finder.
-            :param fullname the name of the module to load
-            :param path to the module or the package.
-            If it is a package the path must point to a directory.
-            Otherwise the path to the python module is needed
-            """
-            super(SourceFileLoader2, self).__init__(fullname, path)
-
-        def get_filename(self, fullname):
-            """Return the path to the source file."""
-            if os.path.isdir(self.path) and os.path.isfile(os.path.join(self.path, '__init__.py')):
-                # to be compatible with usual loaders for python package, we return path to __init__.py
-                return os.path.join(self.path, '__init__.py')
-            else:
-                return self.path  # module case
 
         def get_source(self, name):
             """Concrete implementation of InspectLoader.get_source."""
@@ -357,23 +366,184 @@ if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
                 raise e
             return decode_source(source_bytes)
 
+        def source_to_code(self, data, path):
+            """Return the code object compiled from source.
+            The 'data' argument can be any object type that compile() supports.
+            """
+            return compile(data, path, 'exec', dont_inherit=True)
+
         def get_code(self, fullname):
             source = self.get_source(fullname)
             _verbose_message('compiling code for "{0}"'.format(fullname))
             try:
-                code = compile(source, self.get_filename(fullname), 'exec', dont_inherit=True)
+                code = self.source_to_code(source, self.get_filename(fullname))
                 return code
             except TypeError:
                 raise
 
+    class FileLoader2(object):
+        """Base class of common code needed by SourceFileLoader and ImpLoader."""
+
+        def __init__(self, fullname, path=None):
+            """Cache the module name and the path to the file found by the
+                    finder."""
+            self.name = fullname
+            self.path = path
+
+        def __eq__(self, other):
+            return (self.__class__ == other.__class__ and
+                    self.__dict__ == other.__dict__)
+
+        def __hash__(self):
+            return hash(self.name) ^ hash(self.path)
+
+        def get_filename(self, fullname):
+            """Return the path to the source file as found by the finder."""
+            return self.path
+
         def get_data(self, path):
-            """Return the data from path as raw bytes.
-            """
+            """Return the data from path as raw bytes."""
             with io.FileIO(path, 'r') as file:
                 return file.read()
 
-    class ImpLoader(Loader2):
+    # inspired from importlib2
+    class SourceFileLoader2(FileLoader2, SourceLoader):
+        """Base file loader class which implements the loader protocol methods that
+        require file system usage. Also implements implicit namespace package PEP 420.
+        """
+
+        def __init__(self, fullname, path):
+            """Cache the module name and the path to the file found by the
+            finder.
+            :param fullname the name of the module to load
+            :param path to the module or the package.
+            If it is a package the path must point to a directory.
+            Otherwise the path to the python module is needed
+            """
+            super(SourceFileLoader2, self).__init__(fullname, path)
+
+        # Not producing bytecode here... yet.
+
+    SourceFileLoader = SourceFileLoader2
+
+    def _w_long(x):
+        """Convert a 32-bit integer to little-endian."""
+        return (int(x) & 0xFFFFFFFF).to_bytes(4, 'little')
+
+
+    def _r_long(int_bytes):
+        """Convert 4 bytes in little-endian to an integer."""
+        return int.from_bytes(int_bytes, 'little')
+
+
+    def _validate_bytecode_header(data, source_stats=None, name=None, path=None):
+        """Validate the header of the passed-in bytecode against source_stats (if
+        given) and returning the bytecode that can be compiled by compile().
+        All other arguments are used to enhance error reporting.
+        ImportError is raised when the magic number is incorrect or the bytecode is
+        found to be stale. EOFError is raised when the data is found to be
+        truncated.
+        """
+        exc_details = {}
+        if name is not None:
+            exc_details['name'] = name
+        else:
+            # To prevent having to make all messages have a conditional name.
+            name = '<bytecode>'
+        if path is not None:
+            exc_details['path'] = path
+        magic = data[:4]
+        raw_timestamp = data[4:8]
+        raw_size = data[8:12]
+        if (magic != MAGIC_NUMBER):
+            message = 'bad magic number in {!r}: {!r}'.format(name, magic)
+            _verbose_message('{}', message)
+            raise _ImportError(message, **exc_details)
+        elif len(raw_timestamp) != 4:
+            message = 'reached EOF while reading timestamp in {!r}'.format(name)
+            _verbose_message('{}', message)
+            raise EOFError(message)
+        elif len(raw_size) != 4:
+            message = 'reached EOF while reading size of source in {!r}'.format(name)
+            _verbose_message('{}', message)
+            raise EOFError(message)
+        if source_stats is not None:
+            try:
+                source_mtime = int(source_stats['mtime'])
+            except KeyError:
+                pass
+            else:
+                if _r_long(raw_timestamp) != source_mtime:
+                    message = 'bytecode is stale for {!r}'.format(name)
+                    _verbose_message('{}', message)
+                    raise _ImportError(message, **exc_details)
+            try:
+                source_size = source_stats['size'] & 0xFFFFFFFF
+            except KeyError:
+                pass
+            else:
+                if _r_long(raw_size) != source_size:
+                    raise _ImportError('bytecode is stale for {!r}'.format(name),
+                                      **exc_details)
+        return data[12:]
+
+
+    def _compile_bytecode(data, name=None, bytecode_path=None, source_path=None):
+        """Compile bytecode as returned by _validate_bytecode_header()."""
+        code = marshal.loads(data)
+        if isinstance(code, types.CodeType):
+            _verbose_message('code object from {!r}', bytecode_path)
+            if source_path is not None:
+                imp._fix_co_filename(code, source_path)
+            return code
+        else:
+            raise _ImportError('Non-code object in {!r}'.format(bytecode_path),
+                               name=name, path=bytecode_path)
+
+
+    def _code_to_bytecode(code, mtime=0, source_size=0):
+        """Compile a code object into bytecode for writing out to a byte-compiled
+        file."""
+        data = bytearray(MAGIC_NUMBER)
+        data.extend(_w_long(mtime))
+        data.extend(_w_long(source_size))
+        data.extend(marshal.dumps(code))
+        return data
+
+
+    class SourcelessFileLoader(FileLoader2, _LoaderBasics):
+
+        """Loader which handles sourceless file imports."""
+
+        def get_code(self, fullname):
+            path = self.get_filename(fullname)
+            data = self.get_data(path)
+            bytes_data = _validate_bytecode_header(data, name=fullname, path=path)
+            # TODO : This is buggy : we should fix the bytecode here...
+            return _compile_bytecode(bytes_data, name=fullname, bytecode_path=path)
+
+        def get_source(self, fullname):
+            """Return None as there is no source code."""
+            return None
+
+    # TODO : imp loader for frozen and builtins ??
+
+    # Implementing SourcelessFileLoader, ExtensionFileLoader for python2 with imp, to avoid unnecessary complexity
+    class ImpFileLoader(SourcelessFileLoader):
         """An Import Loader for python 2.7 using imp module"""
+
+        # Even if this can be handled by the sourceless fileloader,
+        # It s better to avoid complications and use the raw imp implementation.
+        def exec_module(self, module):
+            """Execute the module."""
+            try:
+                pass
+                #file, pathname, description = imp.find_module(pkgname.rpartition('.')[-1], path)
+                #sys.modules[pkgname] = imp.load_module(pkgname, file, pathname, description)
+            finally:
+                #if file:
+                #    file.close()
+                pass
 
         def load_module(self, name):
             """Load a module from a file.
@@ -393,8 +563,6 @@ if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
                 for name_idx, name_part in enumerate(name.split('.')):
                     pkgname = ".".join(name.split('.')[:name_idx+1])
                     if pkgname not in sys.modules:
-                        path = None
-
                         if '.' in pkgname:
                             # parent has to be in sys.modules. make sure it is a package, else fails
                             if '__path__' in vars(sys.modules[pkgname.rpartition('.')[0]]):
@@ -416,3 +584,6 @@ if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
                 raise
             return sys.modules[name]
 
+    # to be compatible with py3 importlib
+    SourcelessFileLoader2 = ImpFileLoader
+    ExtensionFileLoader2 = ImpFileLoader

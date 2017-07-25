@@ -13,7 +13,6 @@ import unittest
 
 # CAREFUL : it seems this does have side effect in pytest modules and hooks setup.
 from ._utils import print_importers
-import filefinder2
 
 # importlib
 # https://pymotw.com/3/importlib/index.html
@@ -158,8 +157,9 @@ class TestImplicitNamespaceFF2(WrapperToHideUnittestCase.TestImplicitNamespace):
         dest_pyc = os.path.join(os.path.dirname(__file__), 'nspkg', 'subpkg', 'bytecode.pyc')  # CAREFUL where ?
         py_compile.compile(source_py, dest_pyc, doraise=True)
 
-        # we activate Filefinder2
+        import filefinder2
         filefinder2.activate()
+        # Note : filefinder2 will also be used with python3, but it should internally use importlib.
 
     def test_import_relative_ns_subpkg(self):
         super(TestImplicitNamespaceFF2, self).test_import_relative_ns_subpkg()

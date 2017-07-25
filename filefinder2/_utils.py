@@ -1,7 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
 """
-A module to load python file, but also embedding namespace pacakge logic (PEP420), implemented via pkg_resources
+A module for utils
 """
 
 # We need to be extra careful with python versions
