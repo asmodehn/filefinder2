@@ -16,7 +16,7 @@ import imp
 import warnings
 
 
-from ._module_utils import ModuleSpec #, _exec, _load
+from ._module_utils import ModuleSpec
 from ._fileloader2 import get_supported_file_loaders
 
 

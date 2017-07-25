@@ -10,7 +10,7 @@ import six
 #     PathFinder2, FileFinder2, activate,
 #     SourceFileLoader2, SourcelessFileLoader2, ExtensionFileLoader2
 # )
-from ._filefinder2 import activate
+from ._filefinder2 import activate, deactivate, get_filefinder_index_in_path_hooks, get_pathfinder_index_in_meta_hooks
 
 
 """A Python2 and Python3 implementation of import."""
@@ -29,8 +29,10 @@ import types
 import warnings
 
 from ._utils import _ImportError
-
 from ._spec_utils import _find_spec
+
+# extra API (not exposed in importlib) useful when defining extensions of basic python import
+from ._fileloader2 import get_supported_file_loaders
 
 # Public API #########################################################
 

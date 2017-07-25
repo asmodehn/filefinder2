@@ -20,14 +20,26 @@ import sys
 from ._utils import _ImportError, _verbose_message
 
 
+
+try:
+    from importlib.util import MAGIC_NUMBER
+except:
+    import imp
+    MAGIC_NUMBER = imp.get_magic()
+
+
+# This section needs to be at the beginning of the module (since spec_utils rely on it)
+# It refers to Loader that will be defined later on.
 if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
 
     import io
     import imp
     import warnings
 
-    from ._encoding_utils import decode_source
-    from ._module_utils import module_from_spec
+    # from importlib
+    SOURCE_SUFFIXES = ['.py']
+    BYTECODE_SUFFIXES = ['.pyc']
+    EXTENSION_SUFFIXES = []
 
     # Needed by _spec_utils so we load it before importing
     def get_supported_file_loaders():
@@ -39,7 +51,7 @@ if (2, 7) <= sys.version_info < (3, 4):  # valid until which py3 version ?
             if type == imp.PY_SOURCE:
                 loaders.append((SourceFileLoader2, [suffix]))
             else:
-                loaders.append((ImpFileLoader, [suffix]))
+                loaders.append((ImpFileLoader2, [suffix]))
         return loaders
 
 elif sys.version_info >= (3, 4):  # valid from which py3 version ?
@@ -66,12 +78,6 @@ elif sys.version_info >= (3, 4):  # valid from which py3 version ?
         return [extensions, source, bytecode]
 
 
-try:
-    from importlib.util import MAGIC_NUMBER
-except:
-    MAGIC_NUMBER = imp.get_magic()
-
-
 
 
 try:
@@ -80,35 +86,6 @@ try:
     from importlib.machinery import SourceFileLoader, SourcelessFileLoader, ExtensionFileLoader
 except ImportError:
     # backporting SourceFileLoader from python3
-
-    from ._spec_utils import spec_from_loader
-
-
-    # def _exec(spec, module):
-    #     """Execute the spec in an existing module's namespace."""
-    #     name = spec.name
-    #     imp.acquire_lock()
-    #     with _ModuleLockManager(name):
-    #         if sys.modules.get(name) is not module:
-    #             msg = 'module {!r} not in sys.modules'.format(name)
-    #             raise _ImportError(msg, name=name)
-    #         if spec.loader is None:
-    #             if spec.submodule_search_locations is None:
-    #                 raise _ImportError('missing loader', name=spec.name)
-    #             # namespace package
-    #             _init_module_attrs(spec, module, override=True)
-    #             return module
-    #         _init_module_attrs(spec, module, override=True)
-    #         if not hasattr(spec.loader, 'exec_module'):
-    #             # (issue19713) Once BuiltinImporter and ExtensionFileLoader
-    #             # have exec_module() implemented, we can add a deprecation
-    #             # warning here.
-    #             spec.loader.load_module(name)
-    #         else:
-    #             spec.loader.exec_module(module)
-    #     return sys.modules[name]
-
-
 
     # We need to be extra careful with python versions
     # Ref : https://docs.python.org/2/library/modules.html?highlight=imports
@@ -119,6 +96,8 @@ except ImportError:
     import warnings
     from ._utils import _ImportError, _verbose_message
     from ._module_utils import ModuleSpec, module_from_spec
+    from ._encoding_utils import decode_source
+    from ._spec_utils import spec_from_loader
 
 
     class _NamespacePath(object):
@@ -233,7 +212,8 @@ except ImportError:
                     # We don't ensure that the import-related module attributes get
                     # set in the sys.modules replacement case.  Such modules are on
                     # their own.
-                except:
+                except Exception as exc:
+                    # TODO : log exception !
                     # as per https://docs.python.org/3/reference/import.html#loaders
                     if fullname in sys.modules:
                         del sys.modules[fullname]
@@ -297,7 +277,7 @@ except ImportError:
             """Improve python2 semantics for module creation."""
             mod = super(NamespaceLoader2, self).create_module(spec)
             # Set a few properties required by PEP 302
-            mod.__file__ = [p for p in self.path]
+            #mod.__file__ = [p for p in self.path]
             # this will set mod.__repr__ to not builtin... shouldnt break anything in py2...
             # CAREFUL : get_filename present implies the module has ONE location, which is not true with namespaces
             return mod
@@ -346,6 +326,7 @@ except ImportError:
 
         def get_code(self, fullname):
             return compile('', '<string>', 'exec', dont_inherit=True)
+
 
     class SourceLoader(_LoaderBasics):
 
@@ -511,7 +492,7 @@ except ImportError:
         return data
 
 
-    class SourcelessFileLoader(FileLoader2, _LoaderBasics):
+    class SourcelessFileLoader2(FileLoader2, _LoaderBasics):
 
         """Loader which handles sourceless file imports."""
 
@@ -529,7 +510,7 @@ except ImportError:
     # TODO : imp loader for frozen and builtins ??
 
     # Implementing SourcelessFileLoader, ExtensionFileLoader for python2 with imp, to avoid unnecessary complexity
-    class ImpFileLoader(SourcelessFileLoader):
+    class ImpFileLoader2(SourcelessFileLoader2):
         """An Import Loader for python 2.7 using imp module"""
 
         # Even if this can be handled by the sourceless fileloader,
@@ -585,5 +566,5 @@ except ImportError:
             return sys.modules[name]
 
     # to be compatible with py3 importlib
-    SourcelessFileLoader2 = ImpFileLoader
-    ExtensionFileLoader2 = ImpFileLoader
+    SourcelessFileLoader = ImpFileLoader2
+    ExtensionFileLoader = ImpFileLoader2

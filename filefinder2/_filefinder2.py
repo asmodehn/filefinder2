@@ -188,26 +188,29 @@ except ImportError:
             self.path = path or '.'
             # Note : we are not playing with cache here (too complex to get right and not worth it for obsolete python)
 
-            # We need to check that we will be able to find a module or package,
-            # or raise ImportError to allow other finders to be instantiated for this path.
-            # => the logic must correspond to find_module()
-            findable = False
-            for root, dirs, files in os.walk(self.path):
-                findable = findable or any(
-                    os.path.isfile(os.path.join(os.path.join(path, d), '__init__' + suffix))
-                    for suffix, _ in self._loaders
-                    for d in dirs
-                ) or any(
-                    f.endswith(suffix)
-                    for suffix, _ in self._loaders
-                    for f in files
-                )
-
-            if not findable:
-                raise _ImportError("cannot find any matching module based on extensions {0}".format(
-                    [s for s, _ in self._loaders]),
-                    path=self.path
-                )
+            # Need to disable this to matc importlib API
+            # # We need to check that we will be able to find a module or package,
+            # # or raise ImportError to allow other finders to be instantiated for this path.
+            # # => the logic must correspond to find_module()
+            # findable = False
+            # for root, dirs, files in os.walk(self.path):
+            #     findable = findable or any(
+            #         os.path.isfile(os.path.join(os.path.join(path, d), '__init__' + suffix))
+            #         for suffix, _ in self._loaders
+            #         for d in dirs
+            #     ) or any(
+            #         f.endswith(suffix)
+            #         for suffix, _ in self._loaders
+            #         for f in files
+            #     )
+            #
+            # # CAREFUL : this is different from the FileFinder design in importlib,
+            # # since we need to be able to give up (raise ImportError) here and let other finders do their jobs
+            # if not findable:
+            #     raise _ImportError("cannot find any matching module based on extensions {0}".format(
+            #         [s for s, _ in self._loaders]),
+            #         path=self.path
+            #     )
 
         def _get_spec(self, loader_class, fullname, path, smsl, target):
             loader = loader_class(fullname, path)
@@ -308,11 +311,20 @@ except ImportError:
     FileFinder = FileFinder2
 
 if (2, 7) <= sys.version_info < (3, 4):
+
+    supported_loaders = get_supported_file_loaders()
+    path_hook = FileFinder2.path_hook(*supported_loaders)
+
+    def get_pathfinder_index_in_meta_hooks():
+        return sys.meta_path.index(PathFinder2)
+
+    def get_filefinder_index_in_path_hooks():
+        return sys.path_hooks.index(path_hook)
+
+
     # Making the activation explicit for now
     def activate():
         """Install the path-based import components."""
-        supported_loaders = get_supported_file_loaders()
-        path_hook = FileFinder2.path_hook(*supported_loaders)
         if path_hook not in sys.path_hooks:
             sys.path_hooks.append(path_hook)
         # Resetting sys.path_importer_cache values,
@@ -324,26 +336,37 @@ if (2, 7) <= sys.version_info < (3, 4):
             # Setting up the meta_path to change package finding logic
             sys.meta_path.append(PathFinder2)
 
-        return sys.meta_path.index(PathFinder2), sys.path_hooks.index(path_hook)
 
-
-    def deactivate(meta_hook_idx, path_hook_idx):
+    def deactivate():
         # CAREFUL : Even though we remove the path from sys.path,
         # initialized finders will remain in sys.path_importer_cache
 
         # removing metahook
-        sys.meta_path.pop(meta_hook_idx)
-        sys.path_hooks.pop(path_hook_idx)
+        sys.meta_path.pop(get_pathfinder_index_in_meta_hooks())
+        sys.path_hooks.pop(get_filefinder_index_in_path_hooks())
 
         # Resetting sys.path_importer_cache to get rid of previous importers
         sys.path_importer_cache.clear()
 
 elif sys.version_info >= (3, 4):  # valid from which py3 version ?
 
-    def activate():
-        return 3, 1  # hardcoded index of PathFinder in meta_path and FileFinder in path_hooks
+    import importlib
 
-    def deactivate(meta_hook_idx, path_hook_idx):
+    # at import time we find the instantiated filefinder hook (because we know the index)
+    ffhook = sys.path_hooks[1]
+
+    def get_pathfinder_index_in_meta_hooks():
+        return sys.meta_path.index(importlib.machinery.PathFinder)
+
+    def get_filefinder_index_in_path_hooks():
+        # we look for the hook we detected there at import time (should usually be Filefinder
+        # if there isnt too many import mess...
+        return sys.path_hooks.index(ffhook)
+
+    def activate():
+        pass
+
+    def deactivate():
         # NOt doing anything, this is the default for python3
         pass
 
