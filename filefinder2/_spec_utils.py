@@ -115,6 +115,7 @@ except ImportError:
         # non-existent file relative to the filesystem.
 
         spec = ModuleSpec(name, loader, origin=location)
+        spec._set_fileattr = True
 
         # Pick a loader if one wasn't provided.
         if loader is None:

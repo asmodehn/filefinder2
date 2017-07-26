@@ -186,13 +186,13 @@ except ImportError:
                     module.__file__ = spec.origin
                 except AttributeError:
                     pass
-
-            if override or getattr(module, '__cached__', None) is None:
-                if spec.cached is not None:
-                    try:
-                        module.__cached__ = spec.cached
-                    except AttributeError:
-                        pass
+            # No cache implemented in filefinder2 currently
+            # if override or getattr(module, '__cached__', None) is None:
+            #     if spec.cached is not None:
+            #         try:
+            #             module.__cached__ = spec.cached
+            #         except AttributeError:
+            #             pass
         return module
 
     def module_from_spec(spec):

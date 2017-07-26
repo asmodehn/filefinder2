@@ -95,7 +95,7 @@ except ImportError:
 
     import warnings
     from ._utils import _ImportError, _verbose_message
-    from ._module_utils import ModuleSpec, module_from_spec
+    from ._module_utils import ModuleSpec, module_from_spec, _new_module, _init_module_attrs
     from ._encoding_utils import decode_source
     from ._spec_utils import spec_from_loader
 
@@ -513,18 +513,23 @@ except ImportError:
     class ImpFileLoader2(FileLoader2):
         """An Import Loader for python 2.7 using imp module"""
 
-        # Even if this can be handled by the sourceless fileloader,
-        # It s better to avoid complications and use the raw imp implementation.
+        # Not needed but we should have it for API compatibility
+        def create_module(self, spec):
+            # implementation from module_from_spec
+            module = _new_module(spec.name)
+            return module
+
+        # Not really needed but we should have it for API compatibility
         def exec_module(self, module):
-            """Execute the module."""
+            """Execute the module using the old imp."""
+            path = [os.path.dirname(module.__file__)]  # file should have been resolved before (module creation)
+            file = None
             try:
-                pass
-                #file, pathname, description = imp.find_module(pkgname.rpartition('.')[-1], path)
-                #sys.modules[pkgname] = imp.load_module(pkgname, file, pathname, description)
+                file, pathname, description = imp.find_module(module.__name__.rpartition('.')[-1], path)
+                module = imp.load_module(module.__name__, file, pathname, description)
             finally:
-                #if file:
-                #    file.close()
-                pass
+                if file:
+                    file.close()
 
         def load_module(self, name):
             """Load a module from a file.
@@ -541,6 +546,8 @@ except ImportError:
                 # so we directly feed the latest module and correct path
                 # to reuse the logic for choosing the proper loading behavior
 
+                # TODO : double check maybe we do not need the loop here, already handled by finders in dir hierarchy
+                # TODO : use exec_module (recent, more tested API) from here
                 for name_idx, name_part in enumerate(name.split('.')):
                     pkgname = ".".join(name.split('.')[:name_idx+1])
                     if pkgname not in sys.modules:
@@ -551,7 +558,7 @@ except ImportError:
                             else:
                                 raise ImportError("{0} is not a package (no __path__ detected)".format(pkgname.rpartition('.')[0]))
                         else:  # using __file__ instead. should always be there.
-                            path = sys.modules[pkgname].__file__ if pkgname in sys.modules else None
+                            path = os.path.dirname(sys.modules[pkgname].__file__)if pkgname in sys.modules else None
                         try:
                             file, pathname, description = imp.find_module(pkgname.rpartition('.')[-1], path)
                             sys.modules[pkgname] = imp.load_module(pkgname, file, pathname, description)
