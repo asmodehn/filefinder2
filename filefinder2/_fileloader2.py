@@ -510,7 +510,7 @@ except ImportError:
     # TODO : imp loader for frozen and builtins ??
 
     # Implementing SourcelessFileLoader, ExtensionFileLoader for python2 with imp, to avoid unnecessary complexity
-    class ImpFileLoader2(SourcelessFileLoader2):
+    class ImpFileLoader2(FileLoader2):
         """An Import Loader for python 2.7 using imp module"""
 
         # Even if this can be handled by the sourceless fileloader,
