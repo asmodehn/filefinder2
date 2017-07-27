@@ -43,13 +43,15 @@ class WrapperToHideUnittestCase:
             """Verify that package is importable relatively"""
             print_importers()
             assert __package__
-
-            # load_module returns existing modules from sys.modules by specification
-            # see https://docs.python.org/3.3/library/importlib.html#importlib.abc.Loader)
-            pkg_loader = importlib.find_loader(__package__ + '.pkg', [os.path.dirname(__file__)])
-            pkg = pkg_loader.load_module(__package__ + '.pkg')
-            # safely adding to sysmodules to be able to perform relative imports in there
-            #sys.modules.setdefault(nspkg.__name__, nspkg)
+            if sys.modules.get(__package__ + '.pkg'):
+                raise unittest.SkipTest("module previously loaded".format(__package__ + '.pkg'))
+            else:
+                # load_module returns existing modules from sys.modules by specification
+                # see https://docs.python.org/3.3/library/importlib.html#importlib.abc.Loader)
+                pkg_loader = importlib.find_loader(__package__ + '.pkg', [os.path.dirname(__file__)])
+                pkg = pkg_loader.load_module(__package__ + '.pkg')
+                # safely adding to sysmodules to be able to perform relative imports in there
+                #sys.modules.setdefault(nspkg.__name__, nspkg)
 
             self.assertTrue(pkg is not None)
             self.assertTrue(pkg.TestClassInSubPkg is not None)
@@ -64,13 +66,15 @@ class WrapperToHideUnittestCase:
             """Verify that package is importable relatively"""
             print_importers()
             assert __package__
-
-            # load_module returns existing modules from sys.modules by specification
-            # see https://docs.python.org/3.3/library/importlib.html#importlib.abc.Loader)
-            pkg_loader = importlib.find_loader(__package__ + '.pkg', [os.path.dirname(__file__)])
-            pkg = pkg_loader.load_module(__package__ + '.pkg')
-            # safely adding to sysmodules to be able to perform relative imports in there
-            #sys.modules.setdefault(nspkg.__name__, nspkg)
+            if sys.modules.get(__package__ + '.pkg'):
+                raise unittest.SkipTest("module previously loaded".format(__package__ + '.pkg'))
+            else:
+                # load_module returns existing modules from sys.modules by specification
+                # see https://docs.python.org/3.3/library/importlib.html#importlib.abc.Loader)
+                pkg_loader = importlib.find_loader(__package__ + '.pkg', [os.path.dirname(__file__)])
+                pkg = pkg_loader.load_module(__package__ + '.pkg')
+                # safely adding to sysmodules to be able to perform relative imports in there
+                #sys.modules.setdefault(nspkg.__name__, nspkg)
 
             # here we should get the module that has already be loaded while executing subpkg
             submodule = sys.modules.get(__package__ + '.pkg.submodule')
@@ -88,20 +92,25 @@ class WrapperToHideUnittestCase:
             """Verify that package is importable relatively"""
             print_importers()
             assert __package__
+            if sys.modules.get(__package__ + '.pkg'):
+                raise unittest.SkipTest("module previously loaded".format(__package__ + '.pkg'))
+            else:
+                # load_module returns existing modules from sys.modules by specification
+                # see https://docs.python.org/3.3/library/importlib.html#importlib.abc.Loader)
+                pkg_loader = importlib.find_loader(__package__ + '.pkg', [os.path.dirname(__file__)])
+                pkg = pkg_loader.load_module(__package__ + '.pkg')
+                # safely adding to sysmodules to be able to perform relative imports in there
+                #sys.modules.setdefault(nspkg.__name__, nspkg)
 
-            # load_module returns existing modules from sys.modules by specification
-            # see https://docs.python.org/3.3/library/importlib.html#importlib.abc.Loader)
-            pkg_loader = importlib.find_loader(__package__ + '.pkg', [os.path.dirname(__file__)])
-            pkg = pkg_loader.load_module(__package__ + '.pkg')
-            # safely adding to sysmodules to be able to perform relative imports in there
-            #sys.modules.setdefault(nspkg.__name__, nspkg)
-
-            # load_module returns existing modules from sys.modules by specification
-            # see https://docs.python.org/3.3/library/importlib.html#importlib.abc.Loader)
-            bytecode_loader = importlib.find_loader(__package__ + '.pkg.bytecode', pkg.__path__)
-            bytecode = bytecode_loader.load_module(__package__ + '.pkg.bytecode')
-            # safely adding to sysmodules to be able to perform relative imports in there
-            # sys.modules.setdefault(subpkg.__name__, subpkg)
+            if sys.modules.get(__package__ + '.pkg.bytecode'):
+                raise unittest.SkipTest("module previously loaded".format(__package__ + '.pkg.bytecode'))
+            else:
+                # load_module returns existing modules from sys.modules by specification
+                # see https://docs.python.org/3.3/library/importlib.html#importlib.abc.Loader)
+                bytecode_loader = importlib.find_loader(__package__ + '.pkg.bytecode', pkg.__path__)
+                bytecode = bytecode_loader.load_module(__package__ + '.pkg.bytecode')
+                # safely adding to sysmodules to be able to perform relative imports in there
+                # sys.modules.setdefault(subpkg.__name__, subpkg)
 
             self.assertTrue(bytecode is not None)
             self.assertTrue(bytecode.TestClassInBytecode is not None)
@@ -117,12 +126,15 @@ class WrapperToHideUnittestCase:
             print_importers()
             assert __package__
 
-            # load_module returns existing modules from sys.modules by specification
-            # see https://docs.python.org/3.3/library/importlib.html#importlib.abc.Loader)
-            pkg_loader = importlib.find_loader(__package__ + '.pkg', [os.path.dirname(__file__)])
-            pkg = pkg_loader.load_module(__package__ + '.pkg')
-            # safely adding to sysmodules to be able to perform relative imports in there
-            #sys.modules.setdefault(nspkg.__name__, nspkg)
+            if sys.modules.get(__package__ + '.pkg'):
+                raise unittest.SkipTest("module previously loaded".format(__package__ + '.pkg'))
+            else:
+                # load_module returns existing modules from sys.modules by specification
+                # see https://docs.python.org/3.3/library/importlib.html#importlib.abc.Loader)
+                pkg_loader = importlib.find_loader(__package__ + '.pkg', [os.path.dirname(__file__)])
+                pkg = pkg_loader.load_module(__package__ + '.pkg')
+                # safely adding to sysmodules to be able to perform relative imports in there
+                #sys.modules.setdefault(nspkg.__name__, nspkg)
 
             test_class_in_subpkg = pkg.TestClassInSubPkg
 
@@ -139,12 +151,15 @@ class WrapperToHideUnittestCase:
             print_importers()
             assert __package__
 
-            # load_module returns existing modules from sys.modules by specification
-            # see https://docs.python.org/3.3/library/importlib.html#importlib.abc.Loader)
-            pkg_loader = importlib.find_loader(__package__ + '.pkg', [os.path.dirname(__file__)])
-            pkg = pkg_loader.load_module(__package__ + '.pkg')
-            # safely adding to sysmodules to be able to perform relative imports in there
-            #sys.modules.setdefault(pkg.__name__, nspkg)
+            if sys.modules.get(__package__ + '.pkg'):
+                raise unittest.SkipTest("module previously loaded".format(__package__ + '.pkg'))
+            else:
+                # load_module returns existing modules from sys.modules by specification
+                # see https://docs.python.org/3.3/library/importlib.html#importlib.abc.Loader)
+                pkg_loader = importlib.find_loader(__package__ + '.pkg', [os.path.dirname(__file__)])
+                pkg = pkg_loader.load_module(__package__ + '.pkg')
+                # safely adding to sysmodules to be able to perform relative imports in there
+                #sys.modules.setdefault(pkg.__name__, nspkg)
 
             # here we should get the module that has already be loaded while executing subpkg
             submodule = sys.modules.get(__package__ + '.pkg.submodule')
@@ -164,19 +179,25 @@ class WrapperToHideUnittestCase:
             print_importers()
             assert __package__
 
-            # load_module returns existing modules from sys.modules by specification
-            # see https://docs.python.org/3.3/library/importlib.html#importlib.abc.Loader)
-            pkg_loader = importlib.find_loader(__package__ + '.pkg', [os.path.dirname(__file__)])
-            pkg = pkg_loader.load_module(__package__ + '.pkg')
-            # safely adding to sysmodules to be able to perform relative imports in there
-            #sys.modules.setdefault(nspkg.__name__, nspkg)
+            if sys.modules.get(__package__ + '.pkg'):
+                raise unittest.SkipTest("module previously loaded".format(__package__ + '.pkg'))
+            else:
+                # load_module returns existing modules from sys.modules by specification
+                # see https://docs.python.org/3.3/library/importlib.html#importlib.abc.Loader)
+                pkg_loader = importlib.find_loader(__package__ + '.pkg', [os.path.dirname(__file__)])
+                pkg = pkg_loader.load_module(__package__ + '.pkg')
+                # safely adding to sysmodules to be able to perform relative imports in there
+                #sys.modules.setdefault(nspkg.__name__, nspkg)
 
-            # load_module returns existing modules from sys.modules by specification
-            # see https://docs.python.org/3.3/library/importlib.html#importlib.abc.Loader)
-            bytecode_loader = importlib.find_loader(__package__ + '.pkg.bytecode', pkg.__path__)
-            bytecode = bytecode_loader.load_module(__package__ + '.pkg.bytecode')
-            # safely adding to sysmodules to be able to perform relative imports in there
-            # sys.modules.setdefault(subpkg.__name__, subpkg)
+            if sys.modules.get(__package__ + '.pkg.bytecode'):
+                raise unittest.SkipTest("module previously loaded".format(__package__ + '.pkg.bytecode'))
+            else:
+                # load_module returns existing modules from sys.modules by specification
+                # see https://docs.python.org/3.3/library/importlib.html#importlib.abc.Loader)
+                bytecode_loader = importlib.find_loader(__package__ + '.pkg.bytecode', pkg.__path__)
+                bytecode = bytecode_loader.load_module(__package__ + '.pkg.bytecode')
+                # safely adding to sysmodules to be able to perform relative imports in there
+                # sys.modules.setdefault(subpkg.__name__, subpkg)
 
             test_class_in_bytecode = bytecode.TestClassInBytecode
 
@@ -200,10 +221,13 @@ class WrapperToHideUnittestCase:
             print_importers()
             assert __package__
 
-            with self.assertRaises(ImportError):  # namespace packages do not have loaders
-                # Note if this passes, it might be that ANOTHER way of doing import loaded the module,
-                # and you got a bwcompat loader in sys.modules, which gets reused
-                importlib.find_loader(__package__ + '.nspkg', [os.path.dirname(__file__)])
+            if sys.modules.get(__package__ + '.nspkg'):
+                raise unittest.SkipTest("module previously loaded".format(__package__ + '.nspkg'))
+            else:
+                with self.assertRaises(ImportError):  # namespace packages do not have loaders
+                    # Note if this passes, it might be that ANOTHER way of doing import loaded the module,
+                    # and you got a bwcompat loader in sys.modules, which gets reused
+                    importlib.find_loader(__package__ + '.nspkg', [os.path.dirname(__file__)])
 
 
 class TestImplicitNamespaceRaw(WrapperToHideUnittestCase.TestImplicitNamespace):

@@ -47,18 +47,22 @@ class WrapperToHideUnittestCase:
             assert __package__
 
             # import_module checks sys.modules by itself
-            test_pkg = importlib.import_module('.nspkg.subpkg', package=__package__)
-
-            self.assertTrue(test_pkg is not None)
-            self.assertTrue(test_pkg.TestClassInSubPkg is not None)
-            self.assertTrue(callable(test_pkg.TestClassInSubPkg))
-
-            # TODO : implement some differences and check we get them...
-            if hasattr(importlib, 'reload'):  # recent version of importlib
-                # attempting to reload
-                importlib.reload(test_pkg)
+            # but the test is not reflecting anything if we use the already loaded module.
+            if sys.modules.get(__package__ + '.nspkg.subpkg'):
+                raise unittest.SkipTest("module previously loaded".format(__package__ + '.nspkg.subpkg'))
             else:
-                pass
+                test_pkg = importlib.import_module('.nspkg.subpkg', package=__package__)
+
+                self.assertTrue(test_pkg is not None)
+                self.assertTrue(test_pkg.TestClassInSubPkg is not None)
+                self.assertTrue(callable(test_pkg.TestClassInSubPkg))
+
+                # TODO : implement some differences and check we get them...
+                if hasattr(importlib, 'reload'):  # recent version of importlib
+                    # attempting to reload
+                    importlib.reload(test_pkg)
+                else:
+                    pass
 
         def test_importlib_importmodule_relative_ns_subpkg_submodule(self):
             """Verify that package is importable relatively"""
@@ -66,97 +70,127 @@ class WrapperToHideUnittestCase:
             assert __package__
 
             # import_module checks sys.modules by itself
-            test_mod = importlib.import_module('.nspkg.subpkg.submodule', package=__package__)
-
-            self.assertTrue(test_mod is not None)
-            self.assertTrue(test_mod.TestClassInSubModule is not None)
-            self.assertTrue(callable(test_mod.TestClassInSubModule))
-
-            # TODO : implement some differences and check we get them...
-            if hasattr(importlib, 'reload'):  # recent version of importlib
-                # attempting to reload
-                importlib.reload(test_mod)
+            # but the test is not reflecting anything if we use the already loaded module.
+            if sys.modules.get(__package__ + '.nspkg.subpkg.submodule'):
+                raise unittest.SkipTest("module previously loaded".format(__package__ + '.nspkg.subpkg.submodule'))
             else:
-                pass
+                test_mod = importlib.import_module('.nspkg.subpkg.submodule', package=__package__)
+
+                self.assertTrue(test_mod is not None)
+                self.assertTrue(test_mod.TestClassInSubModule is not None)
+                self.assertTrue(callable(test_mod.TestClassInSubModule))
+
+                # TODO : implement some differences and check we get them...
+                if hasattr(importlib, 'reload'):  # recent version of importlib
+                    # attempting to reload
+                    importlib.reload(test_mod)
+                else:
+                    pass
 
         def test_importlib_importmodule_relative_ns_subpkg_bytecode(self):
             """Verify that package is importable relatively"""
             print_importers()
             assert __package__
+
             # import_module checks sys.modules by itself
-            test_mod = importlib.import_module('.nspkg.subpkg.bytecode', package=__package__)
-
-            self.assertTrue(test_mod is not None)
-            self.assertTrue(test_mod.TestClassInBytecode is not None)
-            self.assertTrue(callable(test_mod.TestClassInBytecode))
-
-            # TODO : implement some differences and check we get them...
-            if hasattr(importlib, 'reload'):  # recent version of importlib
-                # attempting to reload
-                importlib.reload(test_mod)
+            # but the test is not reflecting anything if we use the already loaded module.
+            if sys.modules.get(__package__ + '.nspkg.subpkg.bytecode'):
+                raise unittest.SkipTest("module previously loaded".format(__package__ + '.nspkg.subpkg.bytecode'))
             else:
-                pass
+                test_mod = importlib.import_module('.nspkg.subpkg.bytecode', package=__package__)
+
+                self.assertTrue(test_mod is not None)
+                self.assertTrue(test_mod.TestClassInBytecode is not None)
+                self.assertTrue(callable(test_mod.TestClassInBytecode))
+
+                # TODO : implement some differences and check we get them...
+                if hasattr(importlib, 'reload'):  # recent version of importlib
+                    # attempting to reload
+                    importlib.reload(test_mod)
+                else:
+                    pass
 
         def test_importlib_importmodule_class_from_relative_ns_subpkg(self):
             """Verify that test class is importable relatively"""
             print_importers()
             assert __package__
+
             # import_module checks sys.modules by itself
-            nspkg_subpkg = importlib.import_module('.nspkg.subpkg', package=__package__)
-            test_class_in_subpkg = nspkg_subpkg.TestClassInSubPkg
-
-            self.assertTrue(test_class_in_subpkg is not None)
-            self.assertTrue(callable(test_class_in_subpkg))
-
-            # TODO : implement some differences and check we get them...
-            if hasattr(importlib, 'reload'):  # recent version of importlib
-                # attempting to reload
-                importlib.reload(nspkg_subpkg)
+            # but the test is not reflecting anything if we use the already loaded module.
+            if sys.modules.get(__package__ + '.nspkg.subpkg'):
+                raise unittest.SkipTest("module previously loaded".format(__package__ + '.nspkg.subpkg'))
             else:
-                pass
+                nspkg_subpkg = importlib.import_module('.nspkg.subpkg', package=__package__)
+                test_class_in_subpkg = nspkg_subpkg.TestClassInSubPkg
+
+                self.assertTrue(test_class_in_subpkg is not None)
+                self.assertTrue(callable(test_class_in_subpkg))
+
+                # TODO : implement some differences and check we get them...
+                if hasattr(importlib, 'reload'):  # recent version of importlib
+                    # attempting to reload
+                    importlib.reload(nspkg_subpkg)
+                else:
+                    pass
 
         def test_importlib_importmodule_class_from_relative_ns_subpkg_submodule(self):
             """Verify that test class is importable relatively"""
             print_importers()
             assert __package__
+
             # import_module checks sys.modules by itself
-            nspkg_subpkg_submodule = importlib.import_module('.nspkg.subpkg.submodule', package=__package__)
-            test_class_in_submodule = nspkg_subpkg_submodule.TestClassInSubModule
-
-            self.assertTrue(test_class_in_submodule is not None)
-            self.assertTrue(callable(test_class_in_submodule))
-
-            # TODO : implement some differences and check we get them...
-            if hasattr(importlib, 'reload'):  # recent version of importlib
-                # attempting to reload
-                importlib.reload(nspkg_subpkg_submodule)
+            # but the test is not reflecting anything if we use the already loaded module.
+            if sys.modules.get(__package__ + '.nspkg.subpkg.submodule'):
+                raise unittest.SkipTest("module previously loaded".format(__package__ + '.nspkg.subpkg.submodule'))
             else:
-                pass
+                nspkg_subpkg_submodule = importlib.import_module('.nspkg.subpkg.submodule', package=__package__)
+                test_class_in_submodule = nspkg_subpkg_submodule.TestClassInSubModule
+
+                self.assertTrue(test_class_in_submodule is not None)
+                self.assertTrue(callable(test_class_in_submodule))
+
+                # TODO : implement some differences and check we get them...
+                if hasattr(importlib, 'reload'):  # recent version of importlib
+                    # attempting to reload
+                    importlib.reload(nspkg_subpkg_submodule)
+                else:
+                    pass
 
         def test_importlib_importmodule_class_from_relative_ns_subpkg_bytecode(self):
             """Verify that test class is importable relatively"""
             print_importers()
             assert __package__
+
             # import_module checks sys.modules by itself
-            nspkg_subpkg_bytecode = importlib.import_module('.nspkg.subpkg.bytecode', package=__package__)
-            test_class_in_bytecode = nspkg_subpkg_bytecode.TestClassInBytecode
-
-            self.assertTrue(test_class_in_bytecode is not None)
-            self.assertTrue(callable(test_class_in_bytecode))
-
-            # TODO : implement some differences and check we get them...
-            if hasattr(importlib, 'reload'):  # recent version of importlib
-                # attempting to reload
-                importlib.reload(nspkg_subpkg_bytecode)
+            # but the test is not reflecting anything if we use the already loaded module.
+            if sys.modules.get(__package__ + '.nspkg.subpkg.bytecode'):
+                raise unittest.SkipTest("module previously loaded".format(__package__ + '.nspkg.subpkg.bytecode'))
             else:
-                pass
+                nspkg_subpkg_bytecode = importlib.import_module('.nspkg.subpkg.bytecode', package=__package__)
+                test_class_in_bytecode = nspkg_subpkg_bytecode.TestClassInBytecode
+
+                self.assertTrue(test_class_in_bytecode is not None)
+                self.assertTrue(callable(test_class_in_bytecode))
+
+                # TODO : implement some differences and check we get them...
+                if hasattr(importlib, 'reload'):  # recent version of importlib
+                    # attempting to reload
+                    importlib.reload(nspkg_subpkg_bytecode)
+                else:
+                    pass
 
         def test_importlib_importmodule_relative_nonnspkg_raises(self):
             """Verify that package is importable relatively"""
             print_importers()
             assert __package__
-            with self.assertRaises(ImportError):
-                importlib.import_module('.bad_nspkg', package=__package__)
+
+            # import_module checks sys.modules by itself
+            # but the test is not reflecting anything if we use the already loaded module.
+            if sys.modules.get(__package__ + '.bad_nspkg.bad_subpkg'):
+                raise unittest.SkipTest("module previously loaded".format(__package__ + '.bad_nspkg.bad_subpkg'))
+            else:
+                with self.assertRaises(ImportError):
+                    importlib.import_module('.bad_nspkg.bad_subpkg', package=__package__)
 
 
 class TestImplicitNamespaceRaw(WrapperToHideUnittestCase.TestImplicitNamespace):

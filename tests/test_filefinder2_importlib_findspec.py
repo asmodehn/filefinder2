@@ -47,8 +47,9 @@ class WrapperToHideUnittestCase:
             assert __package__
 
             # we need to check sys.modules before doing anything
-            nspkg = sys.modules.get(__package__ + '.nspkg')
-            if not nspkg:
+            if sys.modules.get(__package__ + '.nspkg'):
+                raise unittest.SkipTest("module previously loaded".format(__package__ + '.nspkg'))
+            else:
                 nspkg_spec = importlib.util.find_spec('.nspkg', __package__)
                 nspkg = importlib.util.module_from_spec(nspkg_spec)
                 # safely adding to sysmodules to be able to perform relative imports in there
@@ -58,8 +59,9 @@ class WrapperToHideUnittestCase:
                     nspkg_spec.loader.exec_module(nspkg)
 
             # we need to check sys.modules before doing anything
-            subpkg = sys.modules.get(__package__ + '.nspkg.subpkg')
-            if not subpkg:
+            if sys.modules.get(__package__ + '.nspkg.subpkg'):
+                raise unittest.SkipTest("module previously loaded".format(__package__ + '.nspkg.subpkg'))
+            else:
                 subpkg_spec = importlib.util.find_spec('.nspkg.subpkg', __package__)
                 subpkg = importlib.util.module_from_spec(subpkg_spec)
                 # safely adding to sysmodules to be able to perform relative imports in there
@@ -85,8 +87,9 @@ class WrapperToHideUnittestCase:
             assert __package__
 
             # we need to check sys.modules before doing anything
-            nspkg = sys.modules.get(__package__ + '.nspkg')
-            if not nspkg:
+            if sys.modules.get(__package__ + '.nspkg'):
+                raise unittest.SkipTest("module previously loaded".format(__package__ + '.nspkg'))
+            else:
                 nspkg_spec = importlib.util.find_spec('.nspkg', __package__)
                 nspkg = importlib.util.module_from_spec(nspkg_spec)
                 # safely adding to sysmodules to be able to perform relative imports in there
@@ -96,8 +99,9 @@ class WrapperToHideUnittestCase:
                     nspkg_spec.loader.exec_module(nspkg)
 
             # we need to check sys.modules before doing anything
-            subpkg = sys.modules.get(__package__ + '.nspkg.subpkg')
-            if not subpkg:
+            if sys.modules.get(__package__ + '.nspkg.subpkg'):
+                raise unittest.SkipTest("module previously loaded".format(__package__ + '.nspkg.subpkg'))
+            else:
                 subpkg_spec = importlib.util.find_spec('.nspkg.subpkg', __package__)
                 subpkg = importlib.util.module_from_spec(subpkg_spec)
                 # safely adding to sysmodules to be able to perform relative imports in there
@@ -126,8 +130,9 @@ class WrapperToHideUnittestCase:
             assert __package__
 
             # we need to check sys.modules before doing anything
-            nspkg = sys.modules.get(__package__ + '.nspkg')
-            if not nspkg:
+            if sys.modules.get(__package__ + '.nspkg'):
+                raise unittest.SkipTest("module previously loaded".format(__package__ + '.nspkg'))
+            else:
                 nspkg_spec = importlib.util.find_spec('.nspkg', __package__)
                 nspkg = importlib.util.module_from_spec(nspkg_spec)
                 # safely adding to sysmodules to be able to perform relative imports in there
@@ -137,8 +142,9 @@ class WrapperToHideUnittestCase:
                     nspkg_spec.loader.exec_module(nspkg)
 
             # we need to check sys.modules before doing anything
-            subpkg = sys.modules.get(__package__ + '.nspkg.subpkg')
-            if not subpkg:
+            if sys.modules.get(__package__ + '.nspkg.subpkg'):
+                raise unittest.SkipTest("module previously loaded".format(__package__ + '.nspkg.subpkg'))
+            else:
                 subpkg_spec = importlib.util.find_spec('.nspkg.subpkg', __package__)
                 subpkg = importlib.util.module_from_spec(subpkg_spec)
                 # safely adding to sysmodules to be able to perform relative imports in there
@@ -148,8 +154,9 @@ class WrapperToHideUnittestCase:
                     subpkg_spec.loader.exec_module(subpkg)
 
             # we need to check sys.modules before doing anything
-            bytecode = sys.modules.get(__package__ + '.nspkg.subpkg.bytecode')
-            if not bytecode:
+            if sys.modules.get(__package__ + '.nspkg.subpkg.bytecode'):
+                raise unittest.SkipTest("module previously loaded".format(__package__ + '.nspkg.subpkg.bytecode'))
+            else:
                 # bytecode is not imported hwen executing the __init__ module, so we need to import it separately here
                 bytecode_spec = importlib.util.find_spec('.nspkg.subpkg.bytecode', __package__)
                 bytecode = importlib.util.module_from_spec(bytecode_spec)
@@ -176,8 +183,9 @@ class WrapperToHideUnittestCase:
             assert __package__
 
             # we need to check sys.modules before doing anything
-            nspkg = sys.modules.get(__package__ + '.nspkg')
-            if not nspkg:
+            if sys.modules.get(__package__ + '.nspkg'):
+                raise unittest.SkipTest("module previously loaded".format(__package__ + '.nspkg'))
+            else:
                 nspkg_spec = importlib.util.find_spec('.nspkg', __package__)
                 nspkg = importlib.util.module_from_spec(nspkg_spec)
                 # safely adding to sysmodules to be able to perform relative imports in there
@@ -187,8 +195,9 @@ class WrapperToHideUnittestCase:
                     nspkg_spec.loader.exec_module(nspkg)
 
             # we need to check sys.modules before doing anything
-            subpkg = sys.modules.get(__package__ + '.nspkg.subpkg')
-            if not subpkg:
+            if sys.modules.get(__package__ + '.nspkg.subpkg'):
+                raise unittest.SkipTest("module previously loaded".format(__package__ + '.nspkg.subpkg'))
+            else:
                 subpkg_spec = importlib.util.find_spec('.nspkg.subpkg', __package__)
                 subpkg = importlib.util.module_from_spec(subpkg_spec)
                 # safely adding to sysmodules to be able to perform relative imports in there
@@ -215,8 +224,9 @@ class WrapperToHideUnittestCase:
             assert __package__
 
             # we need to check sys.modules before doing anything
-            nspkg = sys.modules.get(__package__ + '.nspkg')
-            if not nspkg:
+            if sys.modules.get(__package__ + '.nspkg'):
+                raise unittest.SkipTest("module previously loaded".format(__package__ + '.nspkg'))
+            else:
                 nspkg_spec = importlib.util.find_spec('.nspkg', __package__)
                 nspkg = importlib.util.module_from_spec(nspkg_spec)
                 # safely adding to sysmodules to be able to perform relative imports in there
@@ -226,8 +236,9 @@ class WrapperToHideUnittestCase:
                     nspkg_spec.loader.exec_module(nspkg)
 
             # we need to check sys.modules before doing anything
-            subpkg = sys.modules.get(__package__ + '.nspkg.subpkg')
-            if not subpkg:
+            if sys.modules.get(__package__ + '.nspkg.subpkg'):
+                raise unittest.SkipTest("module previously loaded".format(__package__ + '.nspkg.subpkg'))
+            else:
                 subpkg_spec = importlib.util.find_spec('.nspkg.subpkg', __package__)
                 subpkg = importlib.util.module_from_spec(subpkg_spec)
                 # safely adding to sysmodules to be able to perform relative imports in there
@@ -257,8 +268,9 @@ class WrapperToHideUnittestCase:
             assert __package__
 
             # we need to check sys.modules before doing anything
-            nspkg = sys.modules.get(__package__ + '.nspkg')
-            if not nspkg:
+            if sys.modules.get(__package__ + '.nspkg'):
+                raise unittest.SkipTest("module previously loaded".format(__package__ + '.nspkg'))
+            else:
                 nspkg_spec = importlib.util.find_spec('.nspkg', __package__)
                 nspkg = importlib.util.module_from_spec(nspkg_spec)
                 # safely adding to sysmodules to be able to perform relative imports in there
@@ -268,8 +280,9 @@ class WrapperToHideUnittestCase:
                     nspkg_spec.loader.exec_module(nspkg)
 
             # we need to check sys.modules before doing anything
-            subpkg = sys.modules.get(__package__ + '.nspkg.subpkg')
-            if not subpkg:
+            if sys.modules.get(__package__ + '.nspkg.subpkg'):
+                raise unittest.SkipTest("module previously loaded".format(__package__ + '.nspkg.subpkg'))
+            else:
                 subpkg_spec = importlib.util.find_spec('.nspkg.subpkg', __package__)
                 subpkg = importlib.util.module_from_spec(subpkg_spec)
                 # safely adding to sysmodules to be able to perform relative imports in there
@@ -279,8 +292,9 @@ class WrapperToHideUnittestCase:
                     subpkg_spec.loader.exec_module(subpkg)
 
             # we need to check sys.modules before doing anything
-            bytecode = sys.modules.get(__package__ + '.nspkg.subpkg.bytecode')
-            if not bytecode:
+            if sys.modules.get(__package__ + '.nspkg.subpkg.bytecode'):
+                raise unittest.SkipTest("module previously loaded".format(__package__ + '.nspkg.subpkg.bytecode'))
+            else:
                 bytecode_spec = importlib.util.find_spec('.nspkg.subpkg.bytecode', __package__)
                 bytecode = importlib.util.module_from_spec(bytecode_spec)
                 # safely adding to sysmodules to be able to perform relative imports in there
