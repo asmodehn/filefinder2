@@ -2,6 +2,6 @@
 # -*- coding: utf-8 -*-
 
 # Just Dummy class for testing
-class TestClassInBytecode:
-    """Test Class from Bytecode"""
+class TestClassInSubModule:
+    """Test Class from source"""
     pass
