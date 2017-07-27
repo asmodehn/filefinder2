@@ -14,7 +14,9 @@ from ._utils import print_importers
 
 
 # To test that we actually have the same API as importlib
-import filefinder2, filefinder2.util
+import filefinder2
+print (filefinder2.__file__)
+import filefinder2.util
 filefinder2.activate()
 importlib = filefinder2
 importlib.util = filefinder2.util
