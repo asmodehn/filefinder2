@@ -103,10 +103,10 @@ class WrapperToHideUnittestCase:
             assert __package__
             # import_module checks sys.modules by itself
             nspkg_subpkg = importlib.import_module('.nspkg.subpkg', package=__package__)
-            TestClassInSubPkg = nspkg_subpkg.TestClassInSubPkg
+            test_class_in_subpkg = nspkg_subpkg.TestClassInSubPkg
 
-            self.assertTrue(TestClassInSubPkg is not None)
-            self.assertTrue(callable(TestClassInSubPkg))
+            self.assertTrue(test_class_in_subpkg is not None)
+            self.assertTrue(callable(test_class_in_subpkg))
 
             # TODO : implement some differences and check we get them...
             if hasattr(importlib, 'reload'):  # recent version of importlib
@@ -121,10 +121,10 @@ class WrapperToHideUnittestCase:
             assert __package__
             # import_module checks sys.modules by itself
             nspkg_subpkg_submodule = importlib.import_module('.nspkg.subpkg.submodule', package=__package__)
-            TestClassInSubModule = nspkg_subpkg_submodule.TestClassInSubModule
+            test_class_in_submodule = nspkg_subpkg_submodule.TestClassInSubModule
 
-            self.assertTrue(TestClassInSubModule is not None)
-            self.assertTrue(callable(TestClassInSubModule))
+            self.assertTrue(test_class_in_submodule is not None)
+            self.assertTrue(callable(test_class_in_submodule))
 
             # TODO : implement some differences and check we get them...
             if hasattr(importlib, 'reload'):  # recent version of importlib
@@ -139,10 +139,10 @@ class WrapperToHideUnittestCase:
             assert __package__
             # import_module checks sys.modules by itself
             nspkg_subpkg_bytecode = importlib.import_module('.nspkg.subpkg.bytecode', package=__package__)
-            TestClassInBytecode = nspkg_subpkg_bytecode.TestClassInBytecode
+            test_class_in_bytecode = nspkg_subpkg_bytecode.TestClassInBytecode
 
-            self.assertTrue(TestClassInBytecode is not None)
-            self.assertTrue(callable(TestClassInBytecode))
+            self.assertTrue(test_class_in_bytecode is not None)
+            self.assertTrue(callable(test_class_in_bytecode))
 
             # TODO : implement some differences and check we get them...
             if hasattr(importlib, 'reload'):  # recent version of importlib

@@ -197,10 +197,10 @@ class WrapperToHideUnittestCase:
                     # we do this for a normal package
                     subpkg_spec.loader.exec_module(subpkg)
 
-            TestClassInSubPkg = subpkg.TestClassInSubPkg
+            test_class_in_subpkg = subpkg.TestClassInSubPkg
 
-            self.assertTrue(TestClassInSubPkg is not None)
-            self.assertTrue(callable(TestClassInSubPkg))
+            self.assertTrue(test_class_in_subpkg is not None)
+            self.assertTrue(callable(test_class_in_subpkg))
 
             # TODO : implement some differences and check we get them...
             if hasattr(importlib, 'reload'):  # recent version of importlib
@@ -239,10 +239,10 @@ class WrapperToHideUnittestCase:
             # here we should get the module that has already be loaded while executing subpkg
             submodule = sys.modules.get(__package__ + '.nspkg.subpkg.submodule')
 
-            TestClassInSubModule = submodule.TestClassInSubModule
+            test_class_in_submodule = submodule.TestClassInSubModule
 
-            self.assertTrue(TestClassInSubModule is not None)
-            self.assertTrue(callable(TestClassInSubModule))
+            self.assertTrue(test_class_in_submodule is not None)
+            self.assertTrue(callable(test_class_in_submodule))
 
             # TODO : implement some differences and check we get them...
             if hasattr(importlib, 'reload'):  # recent version of importlib
@@ -289,10 +289,10 @@ class WrapperToHideUnittestCase:
                     # we do this for a normal package
                     bytecode_spec.loader.exec_module(bytecode)
 
-            TestClassInBytecode = bytecode.TestClassInBytecode
+            test_class_in_bytecode = bytecode.TestClassInBytecode
 
-            self.assertTrue(TestClassInBytecode is not None)
-            self.assertTrue(callable(TestClassInBytecode))
+            self.assertTrue(test_class_in_bytecode is not None)
+            self.assertTrue(callable(test_class_in_bytecode))
 
             # TODO : implement some differences and check we get them...
             if hasattr(importlib, 'reload'):  # recent version of importlib
@@ -301,7 +301,7 @@ class WrapperToHideUnittestCase:
             else:
                 pass
 
-        def test_importlib_findspec_relative_nonnspkg_returns_None(self):
+        def test_importlib_findspec_relative_nonnspkg_returns_none(self):
             """Verify that package is importable relatively"""
             print_importers()
             assert __package__

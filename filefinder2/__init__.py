@@ -1,18 +1,5 @@
 from __future__ import absolute_import, print_function
 
-import sys
-
-# Selective Import here to allow extending the import logic with other py2.7 importers
-import six
-#
-# from ._filefinder2 import (
-#     get_supported_file_loaders, ModuleSpec, spec_from_file_location, spec_from_loader,
-#     PathFinder2, FileFinder2, activate,
-#     SourceFileLoader2, SourcelessFileLoader2, ExtensionFileLoader2
-# )
-from ._filefinder2 import activate, deactivate, get_filefinder_index_in_path_hooks, get_pathfinder_index_in_meta_hooks
-
-
 """A Python2 and Python3 implementation of import."""
 __all__ = ['__import__', 'import_module', 'invalidate_caches', 'reload']
 
@@ -20,16 +7,16 @@ __all__ = ['__import__', 'import_module', 'invalidate_caches', 'reload']
 
 import imp
 import sys
-
-
-# Fully bootstrapped at this point, import whatever you like, circular
-# dependencies and startup overhead minimisation permitting :)
+import six
 
 import types
 import warnings
 
 from ._utils import _ImportError
 from ._spec_utils import _find_spec
+
+from ._filefinder2 import activate, deactivate
+from ._filefinder2 import get_filefinder_index_in_path_hooks, get_pathfinder_index_in_meta_hooks
 
 # extra API (not exposed in importlib) useful when defining extensions of basic python import
 from ._fileloader2 import get_supported_file_loaders

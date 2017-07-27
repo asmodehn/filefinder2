@@ -107,10 +107,10 @@ class WrapperToHideUnittestCase:
             # need globals to handle relative imports
             # __import__ checks sys.modules by itself
             pkg = importlib.__import__('pkg', globals=globals(), level=1)
-            TestClassInSubPkg = pkg.TestClassInSubPkg
+            test_class_in_subpkg = pkg.TestClassInSubPkg
 
-            self.assertTrue(TestClassInSubPkg is not None)
-            self.assertTrue(callable(TestClassInSubPkg))
+            self.assertTrue(test_class_in_subpkg is not None)
+            self.assertTrue(callable(test_class_in_subpkg))
 
             # TODO : implement some differences and check we get them...
             if hasattr(importlib, 'reload'):  # recent version of importlib
@@ -126,10 +126,10 @@ class WrapperToHideUnittestCase:
             # need globals to handle relative imports
             # __import__ checks sys.modules by itself
             pkg = importlib.__import__('pkg.submodule', globals=globals(), level=1)
-            TestClassInSubModule = pkg.submodule.TestClassInSubModule
+            test_class_in_submodule = pkg.submodule.TestClassInSubModule
 
-            self.assertTrue(TestClassInSubModule is not None)
-            self.assertTrue(callable(TestClassInSubModule))
+            self.assertTrue(test_class_in_submodule is not None)
+            self.assertTrue(callable(test_class_in_submodule))
 
             # TODO : implement some differences and check we get them...
             if hasattr(importlib, 'reload'):  # recent version of importlib
@@ -144,10 +144,10 @@ class WrapperToHideUnittestCase:
             assert __package__
             # need globals to handle relative imports
             pkg = importlib.__import__('pkg.bytecode', globals=globals(), level=1)
-            TestClassInBytecode = pkg.bytecode.TestClassInBytecode
+            test_class_in_bytecode = pkg.bytecode.TestClassInBytecode
 
-            self.assertTrue(TestClassInBytecode is not None)
-            self.assertTrue(callable(TestClassInBytecode))
+            self.assertTrue(test_class_in_bytecode is not None)
+            self.assertTrue(callable(test_class_in_bytecode))
 
             # TODO : implement some differences and check we get them...
             if hasattr(importlib, 'reload'):  # recent version of importlib
@@ -228,10 +228,10 @@ class WrapperToHideUnittestCase:
             assert __package__
             nspkg = importlib.__import__('nspkg.subpkg', globals=globals(),
                                          level=1)  # need globals to handle relative imports
-            TestClassInSubPkg = nspkg.subpkg.TestClassInSubPkg
+            test_class_in_subpkg = nspkg.subpkg.TestClassInSubPkg
 
-            self.assertTrue(TestClassInSubPkg is not None)
-            self.assertTrue(callable(TestClassInSubPkg))
+            self.assertTrue(test_class_in_subpkg is not None)
+            self.assertTrue(callable(test_class_in_subpkg))
 
             # TODO : implement some differences and check we get them...
             if hasattr(importlib, 'reload'):  # recent version of importlib
@@ -246,10 +246,10 @@ class WrapperToHideUnittestCase:
             assert __package__
             nspkg = importlib.__import__('nspkg.subpkg.submodule', globals=globals(),
                                          level=1)  # need globals to handle relative imports
-            TestClassInSubModule = nspkg.subpkg.submodule.TestClassInSubModule
+            test_class_in_submodule = nspkg.subpkg.submodule.TestClassInSubModule
 
-            self.assertTrue(TestClassInSubModule is not None)
-            self.assertTrue(callable(TestClassInSubModule))
+            self.assertTrue(test_class_in_submodule is not None)
+            self.assertTrue(callable(test_class_in_submodule))
 
             # TODO : implement some differences and check we get them...
             if hasattr(importlib, 'reload'):  # recent version of importlib
@@ -264,10 +264,10 @@ class WrapperToHideUnittestCase:
             assert __package__
             nspkg = importlib.__import__('nspkg.subpkg.bytecode', globals=globals(),
                                          level=1)  # need globals to handle relative imports
-            TestClassInBytecode = nspkg.subpkg.bytecode.TestClassInBytecode
+            test_class_in_bytecode = nspkg.subpkg.bytecode.TestClassInBytecode
 
-            self.assertTrue(TestClassInBytecode is not None)
-            self.assertTrue(callable(TestClassInBytecode))
+            self.assertTrue(test_class_in_bytecode is not None)
+            self.assertTrue(callable(test_class_in_bytecode))
 
             # TODO : implement some differences and check we get them...
             if hasattr(importlib, 'reload'):  # recent version of importlib

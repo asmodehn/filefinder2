@@ -124,10 +124,10 @@ class WrapperToHideUnittestCase:
             # safely adding to sysmodules to be able to perform relative imports in there
             #sys.modules.setdefault(nspkg.__name__, nspkg)
 
-            TestClassInSubPkg = pkg.TestClassInSubPkg
+            test_class_in_subpkg = pkg.TestClassInSubPkg
 
-            self.assertTrue(TestClassInSubPkg is not None)
-            self.assertTrue(callable(TestClassInSubPkg))
+            self.assertTrue(test_class_in_subpkg is not None)
+            self.assertTrue(callable(test_class_in_subpkg))
 
             # Note : apparently reload is broken with find_loader (at least on python 3.5)
             # _find_spec in reload() apparently returns None...
@@ -149,10 +149,10 @@ class WrapperToHideUnittestCase:
             # here we should get the module that has already be loaded while executing subpkg
             submodule = sys.modules.get(__package__ + '.pkg.submodule')
 
-            TestClassInSubModule = submodule.TestClassInSubModule
+            test_class_in_submodule = submodule.TestClassInSubModule
 
-            self.assertTrue(TestClassInSubModule is not None)
-            self.assertTrue(callable(TestClassInSubModule))
+            self.assertTrue(test_class_in_submodule is not None)
+            self.assertTrue(callable(test_class_in_submodule))
 
             # Note : apparently reload is broken with find_loader (at least on python 3.5)
             # _find_spec in reload() apparently returns None...
@@ -178,17 +178,17 @@ class WrapperToHideUnittestCase:
             # safely adding to sysmodules to be able to perform relative imports in there
             # sys.modules.setdefault(subpkg.__name__, subpkg)
 
-            TestClassInBytecode = bytecode.TestClassInBytecode
+            test_class_in_bytecode = bytecode.TestClassInBytecode
 
-            self.assertTrue(TestClassInBytecode is not None)
-            self.assertTrue(callable(TestClassInBytecode))
+            self.assertTrue(test_class_in_bytecode is not None)
+            self.assertTrue(callable(test_class_in_bytecode))
 
             # Note : apparently reload is broken with find_loader (at least on python 3.5)
             # _find_spec in reload() apparently returns None...
             #
             # => not testing reload in that case (this API is obsolete anyway)
 
-        def test_importlib_loadmodule_relative_badpkg_returns_None(self):
+        def test_importlib_loadmodule_relative_badpkg_returns_none(self):
             """Verify that package is importable relatively"""
             print_importers()
             assert __package__
