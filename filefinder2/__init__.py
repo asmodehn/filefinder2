@@ -13,7 +13,6 @@ import types
 import warnings
 
 from ._utils import _ImportError
-from ._spec_utils import _find_spec
 
 from ._filefinder2 import activate, deactivate
 from ._filefinder2 import get_filefinder_index_in_path_hooks, get_pathfinder_index_in_meta_hooks
@@ -37,6 +36,8 @@ except ImportError:
 try:
     from importlib import find_loader
 except ImportError:
+    from ._spec_utils import _find_spec
+
     def find_loader(name, path=None):
         """Return the loader for the specified module.
 
@@ -73,11 +74,12 @@ except ImportError:
 
 # This should be in all python >2.7
 from importlib import import_module
+
 try:
     from importlib import __import__
 except ImportError:
     # using the builtin method
-    __import__= __import__
+    __import__ = __import__
 
 
 try:
@@ -110,37 +112,6 @@ except ImportError:
         _RELOADING[name] = module
         try:
             reload(module)
-
-            # Importlib implementation
-            # parent_name = name.rpartition('.')[0]
-            # if parent_name:
-            #     try:
-            #         parent = sys.modules[parent_name]
-            #     except KeyError:
-            #         msg = "parent {!r} not in sys.modules"
-            #         six.raise_from(_ImportError(msg.format(parent_name),
-            #                           name=parent_name), None)
-            #     else:
-            #         pkgpath = parent.__path__
-            # else:
-            #     pkgpath = None
-            # target = module
-            # spec = module.__spec__ = _find_spec(name, pkgpath, target)
-            #
-            #
-            # #_bootstrap._exec(spec, module)
-            # #module_from_spec(spec)
-            # if spec.loader is None:
-            #     if spec.submodule_search_locations is None:
-            #         raise _ImportError('missing loader', name=spec.name)
-            #     # namespace package
-            #     _init_module_attrs(spec, module, override=True)
-            #     return module
-            # if not hasattr(spec.loader, 'exec_module'):
-            #     spec.loader.load_module(name)
-            # else:
-            #     spec.loader.exec_module(module)
-
 
             # The module may have replaced itself in sys.modules!
             return sys.modules[name]
