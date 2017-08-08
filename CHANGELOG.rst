@@ -2,8 +2,43 @@ Changelog
 =========
 
 
-0.3.1 (2017-07-03)
+0.4.1 (2017-08-08)
 ------------------
+- Fixing PEP link in README. [alexv]
+- Merge pull request #13 from asmodehn/pyup-update-pytest-
+  xdist-1.18.1-to-1.18.2. [AlexV]
+
+  Update pytest-xdist to 1.18.2
+- Update pytest-xdist from 1.18.1 to 1.18.2. [pyup-bot]
+- Restructuring tests. [alexv]
+- Skipping tests if they are run in unboxed mode (and cannot test any
+  import properly) [alexv]
+- Merge pull request #12 from asmodehn/import_23_api. [AlexV]
+
+  Import 23 api
+- Fixing import order. [alexv]
+- Cleanup and style changes. [alexv]
+- Removing broken sourcelessfileloader. [alexv]
+- Small fixes and separate tests with different ways to import with
+  importlib, to not have one pollute the other if unboxed, given that
+  one package should use only one way, made for one interpreter version.
+  [alexv]
+- ImpFileloader not using broken SourcelessFileLoader for now. [alexv]
+- Refining activation / deactivation of filefinder2 FileFinder not
+  raising ImportError on __init__ to match python3 behavior. [alexv]
+- Implemented importlib API. All tests passing except exec_module on
+  bytecode loader. [alexv]
+- Fixing tests by fixing namespace package handling in pathfinder.
+  [alexv]
+- WIP refactoring to use filefinder2 as an API for cross py2 py3 custom
+  importers. [alexv]
+- Fixing __init__.py to expose our importer API. [alexv]
+- Starting to wrap importlib useful api for custom importer... [alexv]
+
+
+0.3.1 (2017-07-17)
+------------------
+- V0.3.1. [alexv]
 - Preventing multiple activation to pollute sys.path_hooks and
   sys.meta_path. [alexv]
 - Exposing path_hook only if python2. [alexv]
