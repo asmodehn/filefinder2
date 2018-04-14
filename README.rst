@@ -9,17 +9,13 @@ filefinder2
     :stub-columns: 1
 
     * - tests
-      - |travis| |requires| |landscape| |quantifiedcode|
+      - |travis| |requires| |landscape|
     * - Python
       - |version| |downloads| |wheel| |supported-versions| |supported-implementations|
 
 .. |travis| image:: https://travis-ci.org/asmodehn/filefinder2.svg?branch=master
     :alt: Travis-CI Build Status
     :target: https://travis-ci.org/asmodehn/filefinder2
-
-.. |quantifiedcode| image:: https://www.quantifiedcode.com/api/v1/project/4f2bfe51459c4e5487e3dfaae5bff2de/badge.svg
-    :target: https://www.quantifiedcode.com/app/project/4f2bfe51459c4e5487e3dfaae5bff2de
-    :alt: Code issues
 
 .. |requires| image:: https://requires.io/github/asmodehn/filefinder2/requirements.svg?branch=master
     :alt: Requirements Status
@@ -52,7 +48,7 @@ filefinder2
 .. end-badges
 
 
-filefinder2 aims at integrating PEP 420, and make every directory a namespace package, to mimic python3 behavior.
+filefinder2 implements PEP 420 in Python2, and make every directory a namespace package, effectively mimicking Python3 behavior.
 
 To do this, filefinder2 includes finder and loader hooks that contain the implicit namespace logic.
 
