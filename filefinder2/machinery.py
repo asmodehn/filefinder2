@@ -17,7 +17,7 @@ try:
     )
 except ImportError:
     from ._fileloader2 import (
-        SOURCE_SUFFIXES_2, BYTECODE_SUFFIXES_2, EXTENSION_SUFFIXES_2, get_supported_file_loaders_2
+        SOURCE_SUFFIXES_2, BYTECODE_SUFFIXES_2, EXTENSION_SUFFIXES_2
         # Note some of these will be different than a full fledged python import implementation.
     )
     SOURCE_SUFFIXES = SOURCE_SUFFIXES_2
@@ -27,6 +27,7 @@ except ImportError:
 
 # Should manage multiple python version by itself
 def get_supported_file_loaders():
+    from ._fileloader2 import get_supported_file_loaders_2
     return get_supported_file_loaders_2()
 
 
