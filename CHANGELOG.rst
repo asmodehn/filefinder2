@@ -2,8 +2,24 @@ Changelog
 =========
 
 
+(unreleased)
+------------
+- Adding generated doc. [AlexV]
+- Removed quantifiedCode badge. [AlexV]
+
+  cleaning readme text.
+- Update pytest from 3.1.3 to 3.5.0 (#36) [pyup.io bot]
+- Merge pull request #35 from asmodehn/pyup-update-
+  twine-1.9.1-to-1.11.0. [AlexV]
+
+  Update twine to 1.11.0
+- Update twine from 1.9.1 to 1.11.0. [pyup-bot]
+- Fixing PEP link in README for good this time. [alexv]
+
+
 0.4.1 (2017-08-08)
 ------------------
+- V0.4.1. [alexv]
 - Fixing PEP link in README. [alexv]
 - Merge pull request #13 from asmodehn/pyup-update-pytest-
   xdist-1.18.1-to-1.18.2. [AlexV]
