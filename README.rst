@@ -58,12 +58,9 @@ Usage:
 ------
 ::
 
-    import sys
+    import filefinder2
 
-    if (2, 7) <= sys.version_info < (3, 4):
-        import filefinder2
-        filefinder2.activate()
-
-    import namespace.package
+    with filefinder2.enable_pep420():
+        import namespace.package
 
 
