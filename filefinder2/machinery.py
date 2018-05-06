@@ -11,9 +11,7 @@ from ._fileloader2 import ModuleSpec
 # WindowsRegistryFinder
 try:
     from importlib.machinery import (
-        SOURCE_SUFFIXES, SourceFileLoader,
-        BYTECODE_SUFFIXES, SourcelessFileLoader,
-        EXTENSION_SUFFIXES, ExtensionFileLoader,
+        SOURCE_SUFFIXES, BYTECODE_SUFFIXES, EXTENSION_SUFFIXES
     )
 except ImportError:
     from ._fileloader2 import (
@@ -48,11 +46,6 @@ except ImportError:
     SourceFileLoader = SourceFileLoader2
     SourcelessFileLoader = ImpFileLoader2
     ExtensionFileLoader = ImpFileLoader2
-
-
-
-
-
 
 
 # Because we need to set our classes at import time
