@@ -15,11 +15,15 @@ import contextlib
 
 from ._utils import _ImportError
 
-from .machinery import PathFinder, FileFinder
-from .machinery import get_filefinder_index_in_path_hooks, get_pathfinder_index_in_meta_hooks
-
-# extra API (not exposed in importlib) useful when defining extensions of basic python import
-from .machinery import get_supported_file_loaders
+from .machinery import (
+    PathFinder,
+    FileFinder,
+    # extra API (not exposed in importlib) useful when defining extensions of basic python import
+    ff_path_hook,
+    get_supported_file_loaders,
+    get_filefinder_index_in_path_hooks,
+    get_pathfinder_index_in_meta_hooks,
+)
 
 
 # Public API #########################################################

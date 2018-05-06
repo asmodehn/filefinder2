@@ -13,6 +13,8 @@ import contextlib
 from .machinery import (
     PathFinder,
     FileFinder,
+    # extra API (not exposed in importlib) useful when defining extensions of basic python import
+    ff_path_hook,
     get_supported_file_loaders,
     get_filefinder_index_in_path_hooks,
     get_pathfinder_index_in_meta_hooks,
@@ -26,8 +28,6 @@ def activate():
     """Install the path-based import components."""
 
     global PathFinder, FileFinder, ff_path_hook
-
-    ff_path_hook = FileFinder.path_hook(*get_supported_file_loaders())
 
     sys.path_hooks.append(ff_path_hook)
     # Resetting sys.path_importer_cache values,
