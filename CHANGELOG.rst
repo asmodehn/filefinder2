@@ -2,8 +2,24 @@ Changelog
 =========
 
 
-(unreleased)
-------------
+0.4.2 (2018-05-17)
+------------------
+- Merge pull request #38 from asmodehn/docs. [AlexV]
+
+  adding generated doc
+- Cleanup docs and fixing links. [AlexV]
+- Small machinery cleanup. [AlexV]
+- Merge pull request #39 from asmodehn/refactor_force. [AlexV]
+
+  refactored a bit to be able to enforce using backported classes in py3
+- Adding missing import. [AlexV]
+- Reviewing hooks to make sure they come from machinery that manages
+  py2/py3. [AlexV]
+- Small fix after testing with rosimport on python3. [AlexV]
+- Refactored a bit to be able to enforce using backported classes in
+  python3. fixed an error where cache was not cleaned on activate on
+  python3. [AlexV]
+- Updated docs. [AlexV]
 - Adding generated doc. [AlexV]
 - Removed quantifiedCode badge. [AlexV]
 
