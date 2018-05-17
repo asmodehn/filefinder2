@@ -239,10 +239,10 @@ class TestImplicitNamespaceRaw(WrapperToHideUnittestCase.TestImplicitNamespace):
     def setUpClass(cls):
         # we compile the bytecode with the testing python interpreter
         import py_compile
-        source_py = os.path.join(os.path.dirname(__file__), 'nspkg', 'subpkg', 'bytecode_source.py')
+        source_py = os.path.join(os.path.dirname(__file__), 'nspkg', 'subpkg', 'bytecode.py')
         dest_pyc = os.path.join(os.path.dirname(__file__), 'nspkg', 'subpkg', 'bytecode.pyc')  # CAREFUL where
         py_compile.compile(source_py, dest_pyc, doraise=True)
-        source_py = os.path.join(os.path.dirname(__file__), 'pkg', 'bytecode_source.py')
+        source_py = os.path.join(os.path.dirname(__file__), 'pkg', 'bytecode.py')
         dest_pyc = os.path.join(os.path.dirname(__file__), 'pkg', 'bytecode.pyc')  # CAREFUL where
         py_compile.compile(source_py, dest_pyc, doraise=True)
 
@@ -256,10 +256,10 @@ class TestImplicitNamespaceFF2(WrapperToHideUnittestCase.TestImplicitNamespace):
     def setUpClass(cls):
         # we compile the bytecode with the testing python interpreter
         import py_compile
-        source_py = os.path.join(os.path.dirname(__file__), 'nspkg', 'subpkg', 'bytecode_source.py')
+        source_py = os.path.join(os.path.dirname(__file__), 'nspkg', 'subpkg', 'bytecode.py')
         dest_pyc = os.path.join(os.path.dirname(__file__), 'nspkg', 'subpkg', 'bytecode.pyc')  # CAREFUL where
         py_compile.compile(source_py, dest_pyc, doraise=True)
-        source_py = os.path.join(os.path.dirname(__file__), 'pkg', 'bytecode_source.py')
+        source_py = os.path.join(os.path.dirname(__file__), 'pkg', 'bytecode.py')
         dest_pyc = os.path.join(os.path.dirname(__file__), 'pkg', 'bytecode.pyc')  # CAREFUL where
         py_compile.compile(source_py, dest_pyc, doraise=True)
 
