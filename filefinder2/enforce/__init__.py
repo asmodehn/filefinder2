@@ -16,8 +16,6 @@ from .machinery import (
     # extra API (not exposed in importlib) useful when defining extensions of basic python import
     ff_path_hook,
     get_supported_file_loaders,
-    get_filefinder_index_in_path_hooks,
-    get_pathfinder_index_in_meta_hooks,
 )
 
 # Public API #########################################################
@@ -29,6 +27,7 @@ def activate():
 
     global PathFinder, FileFinder, ff_path_hook
 
+    path_hook_index = len(sys.path_hooks)
     sys.path_hooks.append(ff_path_hook)
     # Resetting sys.path_importer_cache values,
     # to support the case where we have an implicit package inside an already loaded package,
@@ -36,16 +35,19 @@ def activate():
     sys.path_importer_cache.clear()
 
     # Setting up the meta_path to change package finding logic
+    pathfinder_index = len(sys.meta_path)
     sys.meta_path.append(PathFinder)
 
+    return path_hook_index, pathfinder_index
 
-def deactivate(force=False):
+
+def deactivate(path_hook_index, pathfinder_index, force=False):
     # CAREFUL : Even though we remove the path from sys.path,
     # initialized finders will remain in sys.path_importer_cache
 
     # removing metahook
-    sys.meta_path.pop(get_pathfinder_index_in_meta_hooks())
-    sys.path_hooks.pop(get_filefinder_index_in_path_hooks())
+    sys.meta_path.pop(pathfinder_index)
+    sys.path_hooks.pop(path_hook_index)
 
     # Resetting sys.path_importer_cache to get rid of previous importers
     sys.path_importer_cache.clear()
@@ -59,6 +61,6 @@ def enable_pep420():
     CAREFUL : this is only intended for import-time debugging purposes from python code.
     :return:
     """
-    activate()
-    yield
-    deactivate()
+    path_hook_index, pathfinder_index = activate()
+    yield path_hook_index, pathfinder_index
+    deactivate(path_hook_index, pathfinder_index)

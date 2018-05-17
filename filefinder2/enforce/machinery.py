@@ -47,15 +47,15 @@ from .._filefinder2 import FileFinder2
 FileFinder = FileFinder2
 ff_path_hook = FileFinder2.path_hook(*get_supported_file_loaders())
 
-
-def get_pathfinder_index_in_meta_hooks():
-    return sys.meta_path.index(PathFinder)
-
-
-def get_filefinder_index_in_path_hooks():
-    # Note the python version distinction is made at import time on ff_path_hook
-    return sys.path_hooks.index(ff_path_hook)
-
+#
+# def get_pathfinder_index_in_meta_hooks():
+#     return sys.meta_path.index(PathFinder)
+#
+#
+# def get_filefinder_index_in_path_hooks():
+#     # Note the python version distinction is made at import time on ff_path_hook
+#     return sys.path_hooks.index(ff_path_hook)
+#
 
 
 

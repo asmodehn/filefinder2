@@ -23,7 +23,7 @@ except ImportError:
     EXTENSION_SUFFIXES = EXTENSION_SUFFIXES_2
 
 
-# Should manage multiple python version by itself
+# Should manage multiple python version by itself
 def get_supported_file_loaders():
     from ._fileloader2 import get_supported_file_loaders_2
     return get_supported_file_loaders_2()
@@ -65,29 +65,34 @@ try:
 
     FileFinder = lib_ff
     # at import time we find the instantiated filefinder hook (because we know the index)
-    ff_path_hook = sys.path_hooks[1]
+    try:  # DANGER : valid on python3 only ( and if imports haven't been modified previously )
+        ff_path_hook = sys.path_hooks[1]
+    except IndexError:
+        ff_path_hook = None
 except ImportError:
 
     from ._filefinder2 import FileFinder2
     FileFinder = FileFinder2
     ff_path_hook = FileFinder2.path_hook(*get_supported_file_loaders())
-    ff_path_hook_original = sys.path_hooks[1]
 
 
-def get_pathfinder_index_in_meta_hooks():
-        return sys.meta_path.index(PathFinder)
-
-
-def get_filefinder_index_in_path_hooks():
-    # Note the python version distinction is made at import time on ff_path_hook
-    idx = None
-    try:
-        idx = sys.path_hooks.index(ff_path_hook)
-    except ValueError:  # if not in list it means filefinder2 was not activated.
-        # we should return the index of the original python filefinder or raise (we dont want to risk breaking imports)
-        idx = sys.path_hooks.index(ff_path_hook_original)
-
-    return idx
+# def get_pathfinder_index_in_meta_hooks():
+#         return sys.meta_path.index(PathFinder)
+#
+#
+# def get_filefinder_index_in_path_hooks():
+#     # Note the python version distinction is made at import time on ff_path_hook
+#     if ff_path_hook is None:  # if it was not detected at first (pypy case)
+#         # then the index is the last one, ie the length
+#         idx = len(sys.path_hooks)
+#     else:
+#         try:
+#             idx = sys.path_hooks.index(ff_path_hook)
+#         except ValueError:  # if not in list it means filefinder2 was not activated.
+#             # we should return the index of the original python filefinder or raise (we dont want to risk breaking imports)
+#             idx = sys.path_hooks.index(ff_path_hook_original)
+#
+#     return idx
 
 
 
