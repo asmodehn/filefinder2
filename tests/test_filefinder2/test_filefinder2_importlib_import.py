@@ -10,18 +10,10 @@ import pytest  # we need to use pytest marker to get __package__ to get the prop
 
 
 # CAREFUL : it seems this does have side effect in pytest modules and hooks setup.
-from ._utils import print_importers
-
-
-# To test that we actually have the same API as importlib
-import filefinder2, filefinder2.util
-filefinder2.activate()
-importlib = filefinder2
-importlib.util = filefinder2.util
-
-# importlib
-# https://pymotw.com/3/importlib/index.html
-# https://pymotw.com/2/importlib/index.html
+try:
+    from ._utils import print_importers, xfail_py2_noff2, xfail_py2_noactive
+except ValueError:  # "Attempted relative import in non-package" when running standalone
+    from _utils import print_importers, xfail_py2_noff2, xfail_py2_noactive
 
 #
 # Note : we cannot assume anything about import implementation (different python version, different version of pytest)
@@ -32,368 +24,371 @@ importlib.util = filefinder2.util
 # We need to test implicit namespace packages PEP 420 (especially for python 2.7)
 # Since we rely on it for ros import.
 # But we can only test relative package structure
-class WrapperToHideUnittestCase:
-    # TODO : depending on the python version we aim to support, we might be able to drop some tests here...
-    class TestImplicitNamespace(unittest.TestCase):
-        """
-        Testing PEP 420
-        """
 
-        # Using __import__
-        def test_importlib_import_relative_pkg(self):
-            """Verify that package is importable relatively"""
-            print_importers()
-            assert __package__
-            # need globals to handle relative imports
-            # __import__ checks sys.modules by itself
-            # but the test is not reflecting anything if we use the already loaded module.
-            if sys.modules.get(__package__ + '.pkg'):
-                raise unittest.SkipTest("module previously loaded".format(__package__ + '.pkg'))
+# TODO : depending on the python version we aim to support, we might be able to drop some tests here...
+@pytest.mark.usefixtures("importlib")
+class TestImplicitNamespace(unittest.TestCase):
+    """
+    Testing PEP 420
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        # we compile the bytecode with the testing python interpreter
+        import py_compile
+        source_py = os.path.join(os.path.dirname(__file__), 'nspkg', 'subpkg', 'bytecode.py')
+        dest_pyc = os.path.join(os.path.dirname(__file__), 'nspkg', 'subpkg', 'bytecode.pyc')  # CAREFUL where
+        py_compile.compile(source_py, dest_pyc, doraise=True)
+        source_py = os.path.join(os.path.dirname(__file__), 'pkg', 'bytecode.py')
+        dest_pyc = os.path.join(os.path.dirname(__file__), 'pkg', 'bytecode.pyc')  # CAREFUL where
+        py_compile.compile(source_py, dest_pyc, doraise=True)
+
+    def setUp(self):
+        # filefinder2 will be imported and activated depending on command line options. see conftext.py
+        assert hasattr(self, "importlib")
+
+    # Using __import__
+    @xfail_py2_noff2
+    def test_importlib_import_relative_pkg(self):
+        """Verify that package is importable relatively"""
+        print_importers()
+        assert __package__
+        # need globals to handle relative imports
+        # __import__ checks sys.modules by itself
+        # but the test is not reflecting anything if we use the already loaded module.
+        if sys.modules.get(__package__ + '.pkg'):
+            self.fail("module {0} previously loaded. You might need to fix your tests to run with --forked.".format(__package__ + '.pkg'))
+        else:
+            pkg = self.importlib.__import__('pkg', globals=globals(), level=1)
+            test_pkg = pkg
+
+            self.assertTrue(test_pkg is not None)
+            self.assertTrue(test_pkg.TestClassInSubPkg is not None)
+            self.assertTrue(callable(test_pkg.TestClassInSubPkg))
+
+            # TODO : implement some differences and check we get them...
+            if hasattr(self.importlib, 'reload'):  # recent version of importlib
+                # attempting to reload
+                self.importlib.reload(test_pkg)
             else:
-                pkg = importlib.__import__('pkg', globals=globals(), level=1)
-                test_pkg = pkg
+                pass
 
-                self.assertTrue(test_pkg is not None)
-                self.assertTrue(test_pkg.TestClassInSubPkg is not None)
-                self.assertTrue(callable(test_pkg.TestClassInSubPkg))
+    @xfail_py2_noff2
+    def test_importlib_import_relative_pkg_submodule(self):
+        """Verify that package is importable relatively"""
+        print_importers()
+        assert __package__
+        # need globals to handle relative imports
+        # __import__ checks sys.modules by itself
+        # but the test is not reflecting anything if we use the already loaded module.
+        if sys.modules.get(__package__ + '.pkg.submodule'):
+            self.fail("module {0} previously loaded. You might need to fix your tests to run with --forked.".format(__package__ + '.pkg.submodule'))
+        else:
+            pkg = self.importlib.__import__('pkg.submodule', globals=globals(), level=1)
+            test_mod = pkg.submodule
 
-                # TODO : implement some differences and check we get them...
-                if hasattr(importlib, 'reload'):  # recent version of importlib
-                    # attempting to reload
-                    importlib.reload(test_pkg)
-                else:
-                    pass
+            self.assertTrue(test_mod is not None)
+            self.assertTrue(test_mod.TestClassInSubModule is not None)
+            self.assertTrue(callable(test_mod.TestClassInSubModule))
 
-        def test_importlib_import_relative_pkg_submodule(self):
-            """Verify that package is importable relatively"""
-            print_importers()
-            assert __package__
-            # need globals to handle relative imports
-            # __import__ checks sys.modules by itself
-            # but the test is not reflecting anything if we use the already loaded module.
-            if sys.modules.get(__package__ + '.pkg.submodule'):
-                raise unittest.SkipTest("module previously loaded".format(__package__ + '.pkg.submodule'))
+            # TODO : implement some differences and check we get them...
+            if hasattr(self.importlib, 'reload'):  # recent version of importlib
+                # attempting to reload
+                self.importlib.reload(test_mod)
             else:
-                pkg = importlib.__import__('pkg.submodule', globals=globals(), level=1)
-                test_mod = pkg.submodule
+                pass
 
-                self.assertTrue(test_mod is not None)
-                self.assertTrue(test_mod.TestClassInSubModule is not None)
-                self.assertTrue(callable(test_mod.TestClassInSubModule))
+    @xfail_py2_noff2
+    def test_importlib_import_relative_pkg_bytecode(self):
+        """Verify that package is importable relatively"""
+        print_importers()
+        assert __package__
+        # need globals to handle relative imports
+        # __import__ checks sys.modules by itself
+        # but the test is not reflecting anything if we use the already loaded module.
+        if sys.modules.get(__package__ + '.pkg.bytecode'):
+            self.fail("module {0} previously loaded. You might need to fix your tests to run with --forked.".format(__package__ + '.pkg.bytecode'))
+        else:
+            pkg = self.importlib.__import__('pkg.bytecode', globals=globals(), level=1)
+            test_mod = pkg.bytecode
 
-                # TODO : implement some differences and check we get them...
-                if hasattr(importlib, 'reload'):  # recent version of importlib
-                    # attempting to reload
-                    importlib.reload(test_mod)
-                else:
-                    pass
+            self.assertTrue(test_mod is not None)
+            self.assertTrue(test_mod.TestClassInBytecode is not None)
+            self.assertTrue(callable(test_mod.TestClassInBytecode))
 
-        def test_importlib_import_relative_pkg_bytecode(self):
-            """Verify that package is importable relatively"""
-            print_importers()
-            assert __package__
-            # need globals to handle relative imports
-            # __import__ checks sys.modules by itself
-            # but the test is not reflecting anything if we use the already loaded module.
-            if sys.modules.get(__package__ + '.pkg.bytecode'):
-                raise unittest.SkipTest("module previously loaded".format(__package__ + '.pkg.bytecode'))
+            # TODO : implement some differences and check we get them...
+            if hasattr(self.importlib, 'reload'):  # recent version of importlib
+                # attempting to reload
+                self.importlib.reload(test_mod)
             else:
-                pkg = importlib.__import__('pkg.bytecode', globals=globals(), level=1)
-                test_mod = pkg.bytecode
+                pass
 
-                self.assertTrue(test_mod is not None)
-                self.assertTrue(test_mod.TestClassInBytecode is not None)
-                self.assertTrue(callable(test_mod.TestClassInBytecode))
+    @xfail_py2_noff2
+    def test_importlib_import_class_from_relative_pkg(self):
+        """Verify that message class is importable relatively"""
+        print_importers()
+        assert __package__
+        # need globals to handle relative imports
+        # __import__ checks sys.modules by itself
+        # but the test is not reflecting anything if we use the already loaded module.
+        if sys.modules.get(__package__ + '.pkg'):
+            self.fail("module {0} previously loaded. You might need to fix your tests to run with --forked.".format(__package__ + '.pkg'))
+        else:
+            pkg = self.importlib.__import__('pkg', globals=globals(), level=1)
+            test_class_in_subpkg = pkg.TestClassInSubPkg
 
-                # TODO : implement some differences and check we get them...
-                if hasattr(importlib, 'reload'):  # recent version of importlib
-                    # attempting to reload
-                    importlib.reload(test_mod)
-                else:
-                    pass
+            self.assertTrue(test_class_in_subpkg is not None)
+            self.assertTrue(callable(test_class_in_subpkg))
 
-        def test_importlib_import_class_from_relative_pkg(self):
-            """Verify that message class is importable relatively"""
-            print_importers()
-            assert __package__
-            # need globals to handle relative imports
-            # __import__ checks sys.modules by itself
-            # but the test is not reflecting anything if we use the already loaded module.
-            if sys.modules.get(__package__ + '.pkg'):
-                raise unittest.SkipTest("module previously loaded".format(__package__ + '.pkg'))
+            # TODO : implement some differences and check we get them...
+            if hasattr(self.importlib, 'reload'):  # recent version of importlib
+                # attempting to reload
+                self.importlib.reload(pkg)
             else:
-                pkg = importlib.__import__('pkg', globals=globals(), level=1)
-                test_class_in_subpkg = pkg.TestClassInSubPkg
+                pass
 
-                self.assertTrue(test_class_in_subpkg is not None)
-                self.assertTrue(callable(test_class_in_subpkg))
+    @xfail_py2_noff2
+    def test_importlib_import_class_from_relative_pkg_submodule(self):
+        """Verify that package is importable relatively"""
+        print_importers()
+        assert __package__
+        # need globals to handle relative imports
+        # __import__ checks sys.modules by itself
+        # but the test is not reflecting anything if we use the already loaded module.
+        if sys.modules.get(__package__ + '.pkg.submodule'):
+            self.fail("module {0} previously loaded. You might need to fix your tests to run with --forked.".format(__package__ + '.pkg.submodule'))
+        else:
+            pkg = self.importlib.__import__('pkg.submodule', globals=globals(), level=1)
+            test_class_in_submodule = pkg.submodule.TestClassInSubModule
 
-                # TODO : implement some differences and check we get them...
-                if hasattr(importlib, 'reload'):  # recent version of importlib
-                    # attempting to reload
-                    importlib.reload(pkg)
-                else:
-                    pass
+            self.assertTrue(test_class_in_submodule is not None)
+            self.assertTrue(callable(test_class_in_submodule))
 
-        def test_importlib_import_class_from_relative_pkg_submodule(self):
-            """Verify that package is importable relatively"""
-            print_importers()
-            assert __package__
-            # need globals to handle relative imports
-            # __import__ checks sys.modules by itself
-            # but the test is not reflecting anything if we use the already loaded module.
-            if sys.modules.get(__package__ + '.pkg.submodule'):
-                raise unittest.SkipTest("module previously loaded".format(__package__ + '.pkg.submodule'))
+            # TODO : implement some differences and check we get them...
+            if hasattr(self.importlib, 'reload'):  # recent version of importlib
+                # attempting to reload
+                self.importlib.reload(pkg)
             else:
-                pkg = importlib.__import__('pkg.submodule', globals=globals(), level=1)
-                test_class_in_submodule = pkg.submodule.TestClassInSubModule
+                pass
 
-                self.assertTrue(test_class_in_submodule is not None)
-                self.assertTrue(callable(test_class_in_submodule))
+    @xfail_py2_noff2
+    def test_importlib_import_class_from_relative_pkg_bytecode(self):
+        """Verify that package is importable relatively"""
+        print_importers()
+        assert __package__
+        # need globals to handle relative imports
+        # __import__ checks sys.modules by itself
+        # but the test is not reflecting anything if we use the already loaded module.
+        if sys.modules.get(__package__ + '.pkg.bytecode'):
+            self.fail("module {0} previously loaded. You might need to fix your tests to run with --forked.".format(__package__ + '.pkg.bytecode'))
+        else:
+            pkg = self.importlib.__import__('pkg.bytecode', globals=globals(), level=1)
+            test_class_in_bytecode = pkg.bytecode.TestClassInBytecode
 
-                # TODO : implement some differences and check we get them...
-                if hasattr(importlib, 'reload'):  # recent version of importlib
-                    # attempting to reload
-                    importlib.reload(pkg)
-                else:
-                    pass
+            self.assertTrue(test_class_in_bytecode is not None)
+            self.assertTrue(callable(test_class_in_bytecode))
 
-        def test_importlib_import_class_from_relative_pkg_bytecode(self):
-            """Verify that package is importable relatively"""
-            print_importers()
-            assert __package__
-            # need globals to handle relative imports
-            # __import__ checks sys.modules by itself
-            # but the test is not reflecting anything if we use the already loaded module.
-            if sys.modules.get(__package__ + '.pkg.bytecode'):
-                raise unittest.SkipTest("module previously loaded".format(__package__ + '.pkg.bytecode'))
+            # TODO : implement some differences and check we get them...
+            if hasattr(self.importlib, 'reload'):  # recent version of importlib
+                # attempting to reload
+                self.importlib.reload(pkg)
             else:
-                pkg = importlib.__import__('pkg.bytecode', globals=globals(), level=1)
-                test_class_in_bytecode = pkg.bytecode.TestClassInBytecode
+                pass
 
-                self.assertTrue(test_class_in_bytecode is not None)
-                self.assertTrue(callable(test_class_in_bytecode))
+    @xfail_py2_noff2
+    def test_importlib_import_relative_badpkg_raises(self):
+        """Verify that package is importable relatively"""
+        print_importers()
+        assert __package__
 
-                # TODO : implement some differences and check we get them...
-                if hasattr(importlib, 'reload'):  # recent version of importlib
-                    # attempting to reload
-                    importlib.reload(pkg)
-                else:
-                    pass
+        # __import__ checks sys.modules by itself
+        # but the test is not reflecting anything if we use the already loaded module.
+        if sys.modules.get(__package__ + '.badpkg'):
+            self.fail("module {0} previously loaded. You might need to fix your tests to run with --forked.".format(__package__ + '.badpkg'))
+        else:
+            with self.assertRaises(ImportError):
+                self.importlib.__import__('badpkg', globals=globals(),
+                                     level=1)  # need globals to handle relative imports
 
-        def test_importlib_import_relative_badpkg_raises(self):
-            """Verify that package is importable relatively"""
-            print_importers()
-            assert __package__
+    @xfail_py2_noff2
+    @xfail_py2_noactive
+    def test_importlib_import_relative_ns_subpkg(self):
+        """Verify that package is importable relatively"""
+        print_importers()
+        assert __package__
 
-            # __import__ checks sys.modules by itself
-            # but the test is not reflecting anything if we use the already loaded module.
-            if sys.modules.get(__package__ + '.badpkg'):
-                raise unittest.SkipTest("module previously loaded".format(__package__ + '.badpkg'))
-            else:
-                with self.assertRaises(ImportError):
-                    importlib.__import__('badpkg', globals=globals(),
+        # __import__ checks sys.modules by itself
+        # but the test is not reflecting anything if we use the already loaded module.
+        if sys.modules.get(__package__ + '.nspkg.subpkg'):
+            self.fail("module {0} previously loaded. You might need to fix your tests to run with --forked.".format(__package__ + '.nspkg.subpkg'))
+        else:
+            nspkg = self.importlib.__import__('nspkg.subpkg', globals=globals(),
                                          level=1)  # need globals to handle relative imports
+            test_pkg = nspkg.subpkg
 
-        def test_importlib_import_relative_ns_subpkg(self):
-            """Verify that package is importable relatively"""
-            print_importers()
-            assert __package__
+            self.assertTrue(test_pkg is not None)
+            self.assertTrue(test_pkg.TestClassInSubPkg is not None)
+            self.assertTrue(callable(test_pkg.TestClassInSubPkg))
 
-            # __import__ checks sys.modules by itself
-            # but the test is not reflecting anything if we use the already loaded module.
-            if sys.modules.get(__package__ + '.nspkg.subpkg'):
-                raise unittest.SkipTest("module previously loaded".format(__package__ + '.nspkg.subpkg'))
+            # TODO : implement some differences and check we get them...
+            if hasattr(self.importlib, 'reload'):  # recent version of importlib
+                # attempting to reload
+                self.importlib.reload(test_pkg)
             else:
-                nspkg = importlib.__import__('nspkg.subpkg', globals=globals(),
-                                             level=1)  # need globals to handle relative imports
-                test_pkg = nspkg.subpkg
+                pass
 
-                self.assertTrue(test_pkg is not None)
-                self.assertTrue(test_pkg.TestClassInSubPkg is not None)
-                self.assertTrue(callable(test_pkg.TestClassInSubPkg))
+    @xfail_py2_noff2
+    @xfail_py2_noactive
+    def test_importlib_import_relative_ns_subpkg_submodule(self):
+        """Verify that package is importable relatively"""
+        print_importers()
+        assert __package__
 
-                # TODO : implement some differences and check we get them...
-                if hasattr(importlib, 'reload'):  # recent version of importlib
-                    # attempting to reload
-                    importlib.reload(test_pkg)
-                else:
-                    pass
+        # __import__ checks sys.modules by itself
+        # but the test is not reflecting anything if we use the already loaded module.
+        if sys.modules.get(__package__ + '.nspkg.subpkg.submodule'):
+            self.fail("module {0} previously loaded. You might need to fix your tests to run with --forked.".format(__package__ + '.nspkg.subpkg.submodule'))
+        else:
+            nspkg = self.importlib.__import__('nspkg.subpkg.submodule', globals=globals(),
+                                         level=1)  # need globals to handle relative imports
+            test_mod = nspkg.subpkg.submodule
 
-        def test_importlib_import_relative_ns_subpkg_submodule(self):
-            """Verify that package is importable relatively"""
-            print_importers()
-            assert __package__
+            self.assertTrue(test_mod is not None)
+            self.assertTrue(test_mod.TestClassInSubModule is not None)
+            self.assertTrue(callable(test_mod.TestClassInSubModule))
 
-            # __import__ checks sys.modules by itself
-            # but the test is not reflecting anything if we use the already loaded module.
-            if sys.modules.get(__package__ + '.nspkg.subpkg.submodule'):
-                raise unittest.SkipTest("module previously loaded".format(__package__ + '.nspkg.subpkg.submodule'))
+            # TODO : implement some differences and check we get them...
+            if hasattr(self.importlib, 'reload'):  # recent version of importlib
+                # attempting to reload
+                self.importlib.reload(test_mod)
             else:
-                nspkg = importlib.__import__('nspkg.subpkg.submodule', globals=globals(),
-                                             level=1)  # need globals to handle relative imports
-                test_mod = nspkg.subpkg.submodule
+                pass
 
-                self.assertTrue(test_mod is not None)
-                self.assertTrue(test_mod.TestClassInSubModule is not None)
-                self.assertTrue(callable(test_mod.TestClassInSubModule))
+    @xfail_py2_noff2
+    @xfail_py2_noactive
+    def test_importlib_import_relative_ns_subpkg_bytecode(self):
+        """Verify that package is importable relatively"""
+        print_importers()
+        assert __package__
 
-                # TODO : implement some differences and check we get them...
-                if hasattr(importlib, 'reload'):  # recent version of importlib
-                    # attempting to reload
-                    importlib.reload(test_mod)
-                else:
-                    pass
+        # __import__ checks sys.modules by itself
+        # but the test is not reflecting anything if we use the already loaded module.
+        if sys.modules.get(__package__ + '.nspkg.subpkg.bytecode'):
+            self.fail("module {0} previously loaded. You might need to fix your tests to run with --forked.".format(__package__ + '.nspkg.subpkg.bytecode'))
+        else:
+            nspkg = self.importlib.__import__('nspkg.subpkg.bytecode', globals=globals(),
+                                         level=1)  # need globals to handle relative imports
+            test_mod = nspkg.subpkg.bytecode
 
-        def test_importlib_import_relative_ns_subpkg_bytecode(self):
-            """Verify that package is importable relatively"""
-            print_importers()
-            assert __package__
+            self.assertTrue(test_mod is not None)
+            self.assertTrue(test_mod.TestClassInBytecode is not None)
+            self.assertTrue(callable(test_mod.TestClassInBytecode))
 
-            # __import__ checks sys.modules by itself
-            # but the test is not reflecting anything if we use the already loaded module.
-            if sys.modules.get(__package__ + '.nspkg.subpkg.bytecode'):
-                raise unittest.SkipTest("module previously loaded".format(__package__ + '.nspkg.subpkg.bytecode'))
+            # TODO : implement some differences and check we get them...
+            if hasattr(self.importlib, 'reload'):  # recent version of importlib
+                # attempting to reload
+                self.importlib.reload(test_mod)
             else:
-                nspkg = importlib.__import__('nspkg.subpkg.bytecode', globals=globals(),
-                                             level=1)  # need globals to handle relative imports
-                test_mod = nspkg.subpkg.bytecode
+                pass
 
-                self.assertTrue(test_mod is not None)
-                self.assertTrue(test_mod.TestClassInBytecode is not None)
-                self.assertTrue(callable(test_mod.TestClassInBytecode))
+    @xfail_py2_noff2
+    @xfail_py2_noactive
+    def test_importlib_import_class_from_relative_ns_subpkg(self):
+        """Verify that message class is importable relatively"""
+        print_importers()
+        assert __package__
 
-                # TODO : implement some differences and check we get them...
-                if hasattr(importlib, 'reload'):  # recent version of importlib
-                    # attempting to reload
-                    importlib.reload(test_mod)
-                else:
-                    pass
+        # __import__ checks sys.modules by itself
+        # but the test is not reflecting anything if we use the already loaded module.
+        if sys.modules.get(__package__ + '.nspkg.subpkg'):
+            self.fail("module {0} previously loaded. You might need to fix your tests to run with --forked.".format(__package__ + '.nspkg.subpkg'))
+        else:
+            nspkg = self.importlib.__import__('nspkg.subpkg', globals=globals(),
+                                         level=1)  # need globals to handle relative imports
+            test_class_in_subpkg = nspkg.subpkg.TestClassInSubPkg
 
-        def test_importlib_import_class_from_relative_ns_subpkg(self):
-            """Verify that message class is importable relatively"""
-            print_importers()
-            assert __package__
+            self.assertTrue(test_class_in_subpkg is not None)
+            self.assertTrue(callable(test_class_in_subpkg))
 
-            # __import__ checks sys.modules by itself
-            # but the test is not reflecting anything if we use the already loaded module.
-            if sys.modules.get(__package__ + '.nspkg.subpkg'):
-                raise unittest.SkipTest("module previously loaded".format(__package__ + '.nspkg.subpkg'))
+            # TODO : implement some differences and check we get them...
+            if hasattr(self.importlib, 'reload'):  # recent version of importlib
+                # attempting to reload
+                self.importlib.reload(nspkg)
             else:
-                nspkg = importlib.__import__('nspkg.subpkg', globals=globals(),
-                                             level=1)  # need globals to handle relative imports
-                test_class_in_subpkg = nspkg.subpkg.TestClassInSubPkg
+                pass
 
-                self.assertTrue(test_class_in_subpkg is not None)
-                self.assertTrue(callable(test_class_in_subpkg))
+    @xfail_py2_noff2
+    @xfail_py2_noactive
+    def test_importlib_import_class_from_relative_ns_subpkg_submodule(self):
+        """Verify that package is importable relatively"""
+        print_importers()
+        assert __package__
 
-                # TODO : implement some differences and check we get them...
-                if hasattr(importlib, 'reload'):  # recent version of importlib
-                    # attempting to reload
-                    importlib.reload(nspkg)
-                else:
-                    pass
+        # __import__ checks sys.modules by itself
+        # but the test is not reflecting anything if we use the already loaded module.
+        if sys.modules.get(__package__ + '.nspkg.subpkg.submodule'):
+            self.fail("module {0} previously loaded. You might need to fix your tests to run with --forked.".format(__package__ + '.nspkg.subpkg.submodule'))
+        else:
+            nspkg = self.importlib.__import__('nspkg.subpkg.submodule', globals=globals(),
+                                         level=1)  # need globals to handle relative imports
+            test_class_in_submodule = nspkg.subpkg.submodule.TestClassInSubModule
 
-        def test_importlib_import_class_from_relative_ns_subpkg_submodule(self):
-            """Verify that package is importable relatively"""
-            print_importers()
-            assert __package__
+            self.assertTrue(test_class_in_submodule is not None)
+            self.assertTrue(callable(test_class_in_submodule))
 
-            # __import__ checks sys.modules by itself
-            # but the test is not reflecting anything if we use the already loaded module.
-            if sys.modules.get(__package__ + '.nspkg.subpkg.submodule'):
-                raise unittest.SkipTest("module previously loaded".format(__package__ + '.nspkg.subpkg.submodule'))
+            # TODO : implement some differences and check we get them...
+            if hasattr(self.importlib, 'reload'):  # recent version of importlib
+                # attempting to reload
+                self.importlib.reload(nspkg)
             else:
-                nspkg = importlib.__import__('nspkg.subpkg.submodule', globals=globals(),
-                                             level=1)  # need globals to handle relative imports
-                test_class_in_submodule = nspkg.subpkg.submodule.TestClassInSubModule
+                pass
 
-                self.assertTrue(test_class_in_submodule is not None)
-                self.assertTrue(callable(test_class_in_submodule))
+    @xfail_py2_noff2
+    @xfail_py2_noactive
+    def test_importlib_import_class_from_relative_ns_subpkg_bytecode(self):
+        """Verify that package is importable relatively"""
+        print_importers()
+        assert __package__
 
-                # TODO : implement some differences and check we get them...
-                if hasattr(importlib, 'reload'):  # recent version of importlib
-                    # attempting to reload
-                    importlib.reload(nspkg)
-                else:
-                    pass
+        # __import__ checks sys.modules by itself
+        # but the test is not reflecting anything if we use the already loaded module.
+        if sys.modules.get(__package__ + '.nspkg.subpkg.bytecode'):
+            self.fail("module {0} previously loaded. You might need to fix your tests to run with --forked.".format(__package__ + '.nspkg.subpkg.bytecode'))
+        else:
+            nspkg = self.importlib.__import__('nspkg.subpkg.bytecode', globals=globals(),
+                                         level=1)  # need globals to handle relative imports
+            test_class_in_bytecode = nspkg.subpkg.bytecode.TestClassInBytecode
 
-        def test_importlib_import_class_from_relative_ns_subpkg_bytecode(self):
-            """Verify that package is importable relatively"""
-            print_importers()
-            assert __package__
+            self.assertTrue(test_class_in_bytecode is not None)
+            self.assertTrue(callable(test_class_in_bytecode))
 
-            # __import__ checks sys.modules by itself
-            # but the test is not reflecting anything if we use the already loaded module.
-            if sys.modules.get(__package__ + '.nspkg.subpkg.bytecode'):
-                raise unittest.SkipTest("module previously loaded".format(__package__ + '.nspkg.subpkg.bytecode'))
+            # TODO : implement some differences and check we get them...
+            if hasattr(self.importlib, 'reload'):  # recent version of importlib
+                # attempting to reload
+                self.importlib.reload(nspkg)
             else:
-                nspkg = importlib.__import__('nspkg.subpkg.bytecode', globals=globals(),
-                                             level=1)  # need globals to handle relative imports
-                test_class_in_bytecode = nspkg.subpkg.bytecode.TestClassInBytecode
+                pass
 
-                self.assertTrue(test_class_in_bytecode is not None)
-                self.assertTrue(callable(test_class_in_bytecode))
+    @xfail_py2_noff2
+    def test_importlib_import_relative_nonnspkg_raises(self):
+        """Verify that bad package is not importable relatively"""
+        print_importers()
+        assert __package__
 
-                # TODO : implement some differences and check we get them...
-                if hasattr(importlib, 'reload'):  # recent version of importlib
-                    # attempting to reload
-                    importlib.reload(nspkg)
-                else:
-                    pass
-
-        def test_importlib_import_relative_nonnspkg_raises(self):
-            """Verify that package is importable relatively"""
-            print_importers()
-            assert __package__
-
-            # __import__ checks sys.modules by itself
-            # but the test is not reflecting anything if we use the already loaded module.
-            if sys.modules.get(__package__ + '.bad_nspkg.bad_subpkg'):
-                raise unittest.SkipTest("module previously loaded".format(__package__ + '.bad_nspkg.bad_subpkg'))
-            else:
-                with self.assertRaises(ImportError):
-                    importlib.__import__('bad_nspkg.bad_subpkg', globals=globals(), level=1)  # need globals to handle relative imports
-
-
-class TestImplicitNamespaceRaw(WrapperToHideUnittestCase.TestImplicitNamespace):
-    """
-    Testing PEP 420
-    """
-
-    @classmethod
-    def setUpClass(cls):
-        # we compile the bytecode with the testing python interpreter
-        import py_compile
-        source_py = os.path.join(os.path.dirname(__file__), 'nspkg', 'subpkg', 'bytecode.py')
-        dest_pyc = os.path.join(os.path.dirname(__file__), 'nspkg', 'subpkg', 'bytecode.pyc')  # CAREFUL where
-        py_compile.compile(source_py, dest_pyc, doraise=True)
-        source_py = os.path.join(os.path.dirname(__file__), 'pkg', 'bytecode.py')
-        dest_pyc = os.path.join(os.path.dirname(__file__), 'pkg', 'bytecode.pyc')  # CAREFUL where
-        py_compile.compile(source_py, dest_pyc, doraise=True)
-
-
-class TestImplicitNamespaceFF2(WrapperToHideUnittestCase.TestImplicitNamespace):
-    """
-    Testing PEP 420
-    """
-
-    @classmethod
-    def setUpClass(cls):
-        # we compile the bytecode with the testing python interpreter
-        import py_compile
-        source_py = os.path.join(os.path.dirname(__file__), 'nspkg', 'subpkg', 'bytecode.py')
-        dest_pyc = os.path.join(os.path.dirname(__file__), 'nspkg', 'subpkg', 'bytecode.pyc')  # CAREFUL where
-        py_compile.compile(source_py, dest_pyc, doraise=True)
-        source_py = os.path.join(os.path.dirname(__file__), 'pkg', 'bytecode.py')
-        dest_pyc = os.path.join(os.path.dirname(__file__), 'pkg', 'bytecode.pyc')  # CAREFUL where
-        py_compile.compile(source_py, dest_pyc, doraise=True)
-
-        import filefinder2 as importlib
-        importlib.activate()
-        # Note : filefinder2 will also be used with python3, but it should internally use importlib.
+        # __import__ checks sys.modules by itself
+        # but the test is not reflecting anything if we use the already loaded module.
+        if sys.modules.get(__package__ + '.bad_nspkg.bad_subpkg'):
+            self.fail("module {0} previously loaded. You might need to fix your tests to run with --forked.".format(__package__ + '.bad_nspkg.bad_subpkg'))
+        else:
+            with self.assertRaises(ImportError):
+                self.importlib.__import__('bad_nspkg.bad_subpkg', globals=globals(), level=1)  # need globals to handle relative imports
 
 
 if __name__ == '__main__':
     import pytest
-    pytest.main(['-s', '-x', __file__, '--boxed'])
+    # testing current python capabilities
+    pytest.main(['-v', '-s', '--noff2', '-x', __file__, '--forked'])
+    # testing importing ff2 provides basic importlib API without disturbing anything
+    pytest.main(['-v', '-s', '--noactive', '-x', __file__, '--forked'])
+    # testing ff2 features
+    pytest.main(['-v', '-s', '-x', __file__, '--forked'])
