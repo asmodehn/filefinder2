@@ -17,7 +17,7 @@ except ValueError:  # "Attempted relative import in non-package" when running st
 
 
 xfail_py34 = pytest.mark.xfail(
-    sys.version_info == (3, 4), reason="python 3.4 doesnt have importlib.util.module_from_spec",
+    sys.version_info < (3, 5), reason="python < 3.5 does not have importlib.util.module_from_spec",
     strict=True
 )
 
@@ -284,7 +284,6 @@ class TestImplicitNamespace(unittest.TestCase):
                 pass
 
     @xfail_py2_noff2
-    @xfail_py34
     def test_importlib_findspec_relative_badpkg_isnone(self):
         """Verify that package is importable relatively"""
         print_importers()
@@ -591,7 +590,6 @@ class TestImplicitNamespace(unittest.TestCase):
             pass
 
     @xfail_py2_noff2
-    @xfail_py34
     def test_importlib_findspec_relative_nonnspkg_returns_none(self):
         """Verify that package is importable relatively"""
         print_importers()
