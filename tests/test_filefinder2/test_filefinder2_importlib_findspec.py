@@ -15,9 +15,18 @@ try:
 except ValueError:  # "Attempted relative import in non-package" when running standalone
     from _utils import print_importers, xfail_py2_noff2, xfail_py2_noactive
 
+# Because python 3.4 has issues with util.module_from_spec
+#: expect failure if we are in python2 and did NOT import filefinder2
+xfail_py34_noff2 = pytest.mark.xfail(  # we need a string there to access the config at runtime
+    "(pytest.config.getoption('--noff2')) and sys.version_info < (3, 5)",
+    reason="python 3.4 has issues with util.module_from_spec without importing filefinder2",
+    strict=True
+)
 
-xfail_py34 = pytest.mark.xfail(
-    sys.version_info < (3, 5), reason="python < 3.5 does not have importlib.util.module_from_spec",
+#: expect failure if we imported filefinder2 but did NOT activate it
+xfail_py34_noactive = pytest.mark.xfail(  # we need a string there to access the config at runtime
+    "(pytest.config.getoption('--noactive')) and sys.version_info < (3, 5)",
+    reason="python 3.4 has issues with util.module_from_spec without activating filefinder2",
     strict=True
 )
 
@@ -57,7 +66,8 @@ class TestImplicitNamespace(unittest.TestCase):
     # using find_spec and module_from_spec
     @xfail_py2_noff2
     @xfail_py2_noactive
-    @xfail_py34
+    @xfail_py34_noff2
+    @xfail_py34_noactive
     def test_importlib_findspec_relative_pkg(self):
         """Verify that package is importable relatively"""
         print_importers()
@@ -90,7 +100,8 @@ class TestImplicitNamespace(unittest.TestCase):
 
     @xfail_py2_noff2
     @xfail_py2_noactive
-    @xfail_py34
+    @xfail_py34_noff2
+    @xfail_py34_noactive
     def test_importlib_findspec_relative_pkg_submodule(self):
         """Verify that package is importable relatively"""
         print_importers()
@@ -126,7 +137,8 @@ class TestImplicitNamespace(unittest.TestCase):
 
     @xfail_py2_noff2
     @xfail_py2_noactive
-    @xfail_py34
+    @xfail_py34_noff2
+    @xfail_py34_noactive
     def test_importlib_findspec_relative_pkg_bytecode(self):
         """Verify that package is importable relatively"""
         print_importers()
@@ -174,7 +186,8 @@ class TestImplicitNamespace(unittest.TestCase):
 
     @xfail_py2_noff2
     @xfail_py2_noactive
-    @xfail_py34
+    @xfail_py34_noff2
+    @xfail_py34_noactive
     def test_importlib_findspec_class_from_relative_pkg(self):
         """Verify that message class is importable relatively"""
         print_importers()
@@ -205,7 +218,8 @@ class TestImplicitNamespace(unittest.TestCase):
 
     @xfail_py2_noff2
     @xfail_py2_noactive
-    @xfail_py34
+    @xfail_py34_noff2
+    @xfail_py34_noactive
     def test_importlib_findspec_class_from_relative_pkg_submodule(self):
         """Verify that package is importable relatively"""
         print_importers()
@@ -239,7 +253,8 @@ class TestImplicitNamespace(unittest.TestCase):
 
     @xfail_py2_noff2
     @xfail_py2_noactive
-    @xfail_py34
+    @xfail_py34_noff2
+    @xfail_py34_noactive
     def test_importlib_findspec_class_from_relative_pkg_bytecode(self):
         """Verify that package is importable relatively"""
         print_importers()
@@ -299,7 +314,8 @@ class TestImplicitNamespace(unittest.TestCase):
 
     @xfail_py2_noff2
     @xfail_py2_noactive
-    @xfail_py34
+    @xfail_py34_noff2
+    @xfail_py34_noactive
     def test_importlib_findspec_relative_ns_subpkg(self):
         """Verify that package is importable relatively"""
         print_importers()
@@ -342,7 +358,8 @@ class TestImplicitNamespace(unittest.TestCase):
 
     @xfail_py2_noff2
     @xfail_py2_noactive
-    @xfail_py34
+    @xfail_py34_noff2
+    @xfail_py34_noactive
     def test_importlib_findspec_relative_ns_subpkg_submodule(self):
         """Verify that package is importable relatively"""
         print_importers()
@@ -388,7 +405,8 @@ class TestImplicitNamespace(unittest.TestCase):
 
     @xfail_py2_noff2
     @xfail_py2_noactive
-    @xfail_py34
+    @xfail_py34_noff2
+    @xfail_py34_noactive
     def test_importlib_findspec_relative_ns_subpkg_bytecode(self):
         """Verify that package is importable relatively"""
         print_importers()
@@ -444,7 +462,8 @@ class TestImplicitNamespace(unittest.TestCase):
 
     @xfail_py2_noff2
     @xfail_py2_noactive
-    @xfail_py34
+    @xfail_py34_noff2
+    @xfail_py34_noactive
     def test_importlib_findspec_class_from_relative_ns_subpkg(self):
         """Verify that message class is importable relatively"""
         print_importers()
@@ -488,7 +507,8 @@ class TestImplicitNamespace(unittest.TestCase):
 
     @xfail_py2_noff2
     @xfail_py2_noactive
-    @xfail_py34
+    @xfail_py34_noff2
+    @xfail_py34_noactive
     def test_importlib_findspec_class_from_relative_ns_subpkg_submodule(self):
         """Verify that package is importable relatively"""
         print_importers()
@@ -535,7 +555,8 @@ class TestImplicitNamespace(unittest.TestCase):
 
     @xfail_py2_noff2
     @xfail_py2_noactive
-    @xfail_py34
+    @xfail_py34_noff2
+    @xfail_py34_noactive
     def test_importlib_findspec_class_from_relative_ns_subpkg_bytecode(self):
         """Verify that package is importable relatively"""
         print_importers()

@@ -19,7 +19,7 @@ def print_importers():
 #: expect failure if we are in python2 and did NOT import filefinder2
 xfail_py2_noff2 = pytest.mark.xfail(  # we need a string there to access the config at runtime
     "(pytest.config.getoption('--noff2')) and sys.version_info < (3, 4)",
-    reason="python 2 does not support namespaces without activating filefinder2",
+    reason="python 2 does not support namespaces without importing filefinder2",
     strict=True
 )
 
