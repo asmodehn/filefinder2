@@ -2,8 +2,39 @@ Changelog
 =========
 
 
+0.5.0 (2018-05-21)
+------------------
+- Added pytest chache to gitignore. [AlexV]
+- Merge pull request #37 from asmodehn/pyup-update-
+  pytest-3.5.0-to-3.5.1. [AlexV]
+
+  Update pytest to 3.5.1
+- Merge branch 'master' into pyup-update-pytest-3.5.0-to-3.5.1. [AlexV]
+- Merge pull request #43 from asmodehn/api_tests_refactor. [AlexV]
+
+  reorganising and improving tests
+- Filefinder2.util.module_from_spec works even without activation.
+  [AlexV]
+- Refining test marks for python 3.4. [AlexV]
+- Refining version check for py34. [AlexV]
+- Marking failing tests in py34. [AlexV]
+- Reorganising and improving tests. [AlexV]
+- Merge pull request #41 from asmodehn/pypy. [AlexV]
+
+  pypy support
+- Adding pypy classifiers to setup.py. [AlexV]
+- Adding pypy and pypy3 to the test envs. [AlexV]
+- Renaming sourcefile to match bytecode name, for pypy to accept it.
+  [AlexV]
+- Attempting to keep track of the hooks in a different way... [AlexV]
+- Able to get filefinder index even if filefinder2 not enabled (fallback
+  on usual python filefinder). [AlexV]
+- Update pytest from 3.5.0 to 3.5.1. [pyup-bot]
+
+
 0.4.2 (2018-05-17)
 ------------------
+- V0.4.2. [AlexV]
 - Merge pull request #38 from asmodehn/docs. [AlexV]
 
   adding generated doc
