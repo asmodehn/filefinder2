@@ -17,7 +17,7 @@ import warnings
 
 
 from ._module_utils import ModuleSpec
-from ._fileloader2 import get_supported_file_loaders
+from ._fileloader2 import get_supported_file_loaders_2
 
 
 try:
@@ -119,7 +119,7 @@ except ImportError:
 
         # Pick a loader if one wasn't provided.
         if loader is None:
-            for loader_class, suffixes in get_supported_file_loaders():
+            for loader_class, suffixes in get_supported_file_loaders_2():
                 if location.endswith(tuple(suffixes)):
                     loader = loader_class(name, location)
                     spec.loader = loader

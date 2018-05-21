@@ -2,8 +2,40 @@ Changelog
 =========
 
 
+0.4.2 (2018-05-17)
+------------------
+- Merge pull request #38 from asmodehn/docs. [AlexV]
+
+  adding generated doc
+- Cleanup docs and fixing links. [AlexV]
+- Small machinery cleanup. [AlexV]
+- Merge pull request #39 from asmodehn/refactor_force. [AlexV]
+
+  refactored a bit to be able to enforce using backported classes in py3
+- Adding missing import. [AlexV]
+- Reviewing hooks to make sure they come from machinery that manages
+  py2/py3. [AlexV]
+- Small fix after testing with rosimport on python3. [AlexV]
+- Refactored a bit to be able to enforce using backported classes in
+  python3. fixed an error where cache was not cleaned on activate on
+  python3. [AlexV]
+- Updated docs. [AlexV]
+- Adding generated doc. [AlexV]
+- Removed quantifiedCode badge. [AlexV]
+
+  cleaning readme text.
+- Update pytest from 3.1.3 to 3.5.0 (#36) [pyup.io bot]
+- Merge pull request #35 from asmodehn/pyup-update-
+  twine-1.9.1-to-1.11.0. [AlexV]
+
+  Update twine to 1.11.0
+- Update twine from 1.9.1 to 1.11.0. [pyup-bot]
+- Fixing PEP link in README for good this time. [alexv]
+
+
 0.4.1 (2017-08-08)
 ------------------
+- V0.4.1. [alexv]
 - Fixing PEP link in README. [alexv]
 - Merge pull request #13 from asmodehn/pyup-update-pytest-
   xdist-1.18.1-to-1.18.2. [AlexV]

@@ -58,12 +58,47 @@ Usage:
 ------
 ::
 
-    import sys
+    import filefinder2
 
-    if (2, 7) <= sys.version_info < (3, 4):
-        import filefinder2
-        filefinder2.activate()
-
-    import namespace.package
+    with filefinder2.enable_pep420():
+        import namespace.package
 
 
+
+Also filefinder2 provides some of python3 importlib API, even without "activating" it.
+For more details have a look inside the tests. There is a quite exhaustive usecase coverage.
+
+
+Recent Upgrade Notes:
+---------------------
+
+filefinder2 until recently had an API with an implicit model::
+
+    import filefinder2
+    # just works !
+
+
+because we were able to do things like::
+
+    if sys.version_info < (3, 3):
+        import filefinder2 as importlib
+    else:
+        import importlib
+
+    # *should* just work for any python versions
+
+However filefinder2 is not a standard library, and this model has proven to be quite tricky to use, given the little visibility an average developer has on the import sequence.
+And as a general rule, it is better to remain in control of our import system, and know what you are doing.
+
+Therefore it was recently changed to an explicit model (using a context manager class)::
+
+    import filefinder2
+
+    with filefinder2.Py3Importer():
+        # works ! but doesn't change anything in python3
+
+    # doesn't work any longer, if you are using python2
+
+
+As a result, the check for the python interpreter version has been included inside filefinder2, instead of being expected of the user (which used to lead to tricks to install dependencies depending on version)
+This means the above code will work and do what you expect it to, no matter the version of Python you are running.
