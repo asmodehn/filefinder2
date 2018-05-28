@@ -54,6 +54,8 @@ To do this, filefinder2 includes finder and loader hooks that contain the implic
 
 It is worth noting that we achieve this without pkg_resources or pkgutil, minimizing the dependencies necessary for that feature.
 
+Credits to importlib2 (and CPython) for providing the foundations for this.
+
 Usage:
 ------
 ::
