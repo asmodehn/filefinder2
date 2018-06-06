@@ -9,7 +9,7 @@ filefinder2
     :stub-columns: 1
 
     * - tests
-      - |travis| |requires| |landscape|
+      - |travis| |requires| |landscape| |codecov|
     * - Python
       - |version| |downloads| |wheel| |supported-versions| |supported-implementations|
 
@@ -24,6 +24,9 @@ filefinder2
 .. |landscape| image:: https://landscape.io/github/asmodehn/filefinder2/master/landscape.svg?style=flat
     :target: hhttps://landscape.io/github/asmodehn/filefinder2/master
     :alt: Code Quality Status
+
+.. |codecov| image:: https://codecov.io/gh/asmodehn/filefinder2/branch/master/graph/badge.svg
+  :target: https://codecov.io/gh/asmodehn/filefinder2
 
 .. |version| image:: https://img.shields.io/pypi/v/filefinder2.svg?style=flat
     :alt: PyPI Package latest release
