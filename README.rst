@@ -25,7 +25,7 @@ filefinder2
     :target: https://landscape.io/github/asmodehn/filefinder2/master
     :alt: Code Quality Status
 
-.. |codecov| image:: https://codecov.io/gh/asmodehn/filefinder2/branch/master/graph/badge.svg
+.. |codecov| image:: https://codecov.io/gh/asmodehn/filefinder2/branch/master/graph/badge.svg
     :alt: CodeCov
     :target: https://codecov.io/gh/asmodehn/filefinder2
 
@@ -68,7 +68,7 @@ Usage:
 
     import filefinder2
 
-    with filefinder2.enable_pep420():
+    with filefinder2.Py3Importer():
         import namespace.package
 
 
@@ -98,7 +98,7 @@ because we were able to do things like::
 However filefinder2 is not a standard library, and this model has proven to be quite tricky to use, given the little visibility an average developer has on the import sequence.
 And as a general rule, it is better to remain in control of our import system, and know what you are doing.
 
-Therefore it was recently changed to an explicit model (using a context manager class)::
+Therefore it was recently changed to an explicit model (using a context manager)::
 
     import filefinder2
 
