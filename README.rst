@@ -9,7 +9,7 @@ filefinder2
     :stub-columns: 1
 
     * - tests
-      - |travis| |requires| |landscape|
+      - |travis| |requires| |landscape| |codecov| |coveralls|
     * - Python
       - |version| |downloads| |wheel| |supported-versions| |supported-implementations|
 
@@ -19,11 +19,19 @@ filefinder2
 
 .. |requires| image:: https://requires.io/github/asmodehn/filefinder2/requirements.svg?branch=master
     :alt: Requirements Status
-    :target: hhttps://requires.io/github/asmodehn/filefinder2/requirements/?branch=master
+    :target: https://requires.io/github/asmodehn/filefinder2/requirements/?branch=master
 
 .. |landscape| image:: https://landscape.io/github/asmodehn/filefinder2/master/landscape.svg?style=flat
-    :target: hhttps://landscape.io/github/asmodehn/filefinder2/master
+    :target: https://landscape.io/github/asmodehn/filefinder2/master
     :alt: Code Quality Status
+
+.. |codecov| image:: https://codecov.io/gh/asmodehn/filefinder2/branch/master/graph/badge.svg
+    :alt: CodeCov
+    :target: https://codecov.io/gh/asmodehn/filefinder2
+
+.. |coveralls| image:: https://coveralls.io/repos/github/asmodehn/filefinder2/badge.svg?branch=master
+    :alt: Coveralls
+    :target: https://coveralls.io/github/asmodehn/filefinder2?branch=master
 
 .. |version| image:: https://img.shields.io/pypi/v/filefinder2.svg?style=flat
     :alt: PyPI Package latest release

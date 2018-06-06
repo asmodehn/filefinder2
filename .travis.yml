@@ -15,10 +15,14 @@ python:
 before_install:
 
 install:
-  - pip install tox tox-travis
+  - pip install tox tox-travis codecov coveralls
 
 script:
   - tox
+
+after_success:
+  - codecov
+  - COVERALLS_PARALLEL=true coveralls
 
 notifications:
   email: false
