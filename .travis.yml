@@ -15,7 +15,7 @@ python:
 before_install:
 
 install:
-  - pip install tox tox-travis codecov coveralls-python
+  - pip install tox tox-travis codecov coveralls
 
 script:
   - tox
