@@ -7,9 +7,8 @@ from ._module_utils import module_from_spec
 from ._spec_utils import spec_from_loader
 from ._spec_utils import _find_spec
 # from ._ import MAGIC_NUMBER, _BACKCOMPAT_MAGIC_NUMBER
-# from ._ import cache_from_source
+from ._cache_utils import cache_from_source, source_from_cache
 from ._encoding_utils import decode_source
-# from ._ import source_from_cache
 from ._spec_utils import spec_from_file_location
 
 import sys
